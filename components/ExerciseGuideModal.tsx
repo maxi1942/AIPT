@@ -6,6 +6,8 @@ import {
   videoSearchUrl,
   MUSCLE_LABELS,
 } from "@/lib/exerciseGuides";
+import { getRigForExercise } from "@/lib/animationRigs";
+import ExerciseAnimation from "./ExerciseAnimation";
 import MuscleDiagram from "./MuscleDiagram";
 
 export default function ExerciseGuideModal({
@@ -56,10 +58,22 @@ export default function ExerciseGuideModal({
           {guide ? (
             <>
               <div>
-                <MuscleDiagram
-                  primary={guide.primary}
-                  secondary={guide.secondary}
-                />
+                <div className="flex flex-wrap items-center justify-center gap-4">
+                  {getRigForExercise(exerciseName) && (
+                    <figure className="text-center">
+                      <div className="rounded-lg border border-zinc-800 bg-zinc-950/60">
+                        <ExerciseAnimation exerciseName={exerciseName} />
+                      </div>
+                      <figcaption className="mt-1 text-xs text-zinc-500">
+                        Movement (stylized)
+                      </figcaption>
+                    </figure>
+                  )}
+                  <MuscleDiagram
+                    primary={guide.primary}
+                    secondary={guide.secondary}
+                  />
+                </div>
                 <div className="mt-3 flex flex-wrap justify-center gap-1.5">
                   {guide.primary.map((m) => (
                     <span
