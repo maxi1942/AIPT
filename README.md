@@ -29,6 +29,29 @@ Open http://localhost:3000.
 
 The app works fully without an API key **except** the AI trainer chat, which needs `ANTHROPIC_API_KEY` set (get one at https://platform.claude.com/).
 
+## Running it on your phone
+
+The app is a normal web app — once it's reachable over the network, open it in your phone's browser and use "Add to Home Screen" for an app-like experience.
+
+**Option A — quickest (same Wi-Fi, no deployment):** run it on your computer and open it from your phone:
+
+```bash
+npm run dev -- -H 0.0.0.0
+```
+
+Then visit `http://<your-computer's-LAN-IP>:3000` on the phone (find the IP with `ipconfig` / `ifconfig`).
+
+**Option B — deploy it (works anywhere):** the app needs a Node server **and a persistent disk** for the SQLite database, so pick a host that offers both — Railway, Fly.io, Render, or any VPS. A production `Dockerfile` is included:
+
+```bash
+docker build -t aipt .
+docker run -p 3000:3000 -v aipt-data:/app/data -e ANTHROPIC_API_KEY=sk-ant-... aipt
+```
+
+On Railway/Fly/Render: connect the GitHub repo, point it at your deploy branch (they auto-detect the Dockerfile), attach a volume mounted at `/app/data`, and set the `ANTHROPIC_API_KEY` environment variable.
+
+> ⚠️ **GitHub Pages won't work** (it only serves static files — this app has a server and API routes). **Vercel/Netlify serverless will lose your data** on every deploy because the filesystem is ephemeral; if you specifically want Vercel, the SQLite layer needs swapping for a hosted database (e.g. Turso or Postgres) first.
+
 ## How the AI trainer works
 
 Each chat request builds a grounding context straight from the database:
