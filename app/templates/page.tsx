@@ -1,0 +1,103 @@
+import Link from "next/link";
+import { getDb } from "@/lib/db";
+import StartWorkoutButton from "@/components/StartWorkoutButton";
+import DeleteTemplateButton from "@/components/DeleteTemplateButton";
+import type { Template, TemplateExercise } from "@/lib/types";
+
+export const dynamic = "force-dynamic";
+
+export default function TemplatesPage() {
+  const db = getDb();
+  const templates = db
+    .prepare("SELECT * FROM templates ORDER BY created_at DESC")
+    .all() as Template[];
+
+  const exercisesByTemplate = new Map<number, TemplateExercise[]>();
+  const allExercises = db
+    .prepare(
+      `SELECT te.*, e.name AS exercise_name
+       FROM template_exercises te
+       JOIN exercises e ON e.id = te.exercise_id
+       ORDER BY te.template_id, te.position`
+    )
+    .all() as TemplateExercise[];
+  for (const te of allExercises) {
+    const list = exercisesByTemplate.get(te.template_id) ?? [];
+    list.push(te);
+    exercisesByTemplate.set(te.template_id, list);
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Workouts</h1>
+          <p className="mt-1 text-sm text-zinc-400">
+            Your standard workout designs. Start one to begin a live session.
+          </p>
+        </div>
+        <Link
+          href="/templates/new"
+          className="rounded-md bg-emerald-400 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-300"
+        >
+          + New workout
+        </Link>
+      </div>
+
+      {templates.length === 0 ? (
+        <div className="rounded-lg border border-dashed border-zinc-700 p-10 text-center text-zinc-400">
+          No workouts designed yet.
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {templates.map((t) => {
+            const exercises = exercisesByTemplate.get(t.id) ?? [];
+            return (
+              <div
+                key={t.id}
+                className="rounded-lg border border-zinc-800 bg-zinc-900 p-5"
+              >
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <h2 className="text-lg font-semibold">{t.name}</h2>
+                    {t.description && (
+                      <p className="mt-1 text-sm text-zinc-400">
+                        {t.description}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <StartWorkoutButton templateId={t.id} />
+                    <Link
+                      href={`/templates/${t.id}/edit`}
+                      className="rounded-md border border-zinc-700 px-3 py-1.5 text-sm text-zinc-300 hover:bg-zinc-800"
+                    >
+                      Edit
+                    </Link>
+                    <DeleteTemplateButton templateId={t.id} />
+                  </div>
+                </div>
+                <ul className="mt-4 space-y-1.5">
+                  {exercises.map((te) => (
+                    <li
+                      key={te.id}
+                      className="flex items-center justify-between rounded-md bg-zinc-950/60 px-3 py-2 text-sm"
+                    >
+                      <span>{te.exercise_name}</span>
+                      <span className="text-zinc-400">
+                        {te.target_sets} × {te.target_reps}
+                        {te.target_weight != null
+                          ? ` @ ${te.target_weight} kg`
+                          : ""}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
