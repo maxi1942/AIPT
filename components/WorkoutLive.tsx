@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import ExerciseGuideModal from "./ExerciseGuideModal";
 import type {
   Exercise,
   SessionDetail,
@@ -265,6 +266,7 @@ function ExerciseCard({
   const [weight, setWeight] = useState("");
   const [rpe, setRpe] = useState("");
   const [busy, setBusy] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
 
   async function submit() {
     const repsNum = Number(reps);
@@ -282,9 +284,16 @@ function ExerciseCard({
     <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-4">
       <div className="flex items-center justify-between">
         <div>
-          <div className="font-semibold">
+          <div className="flex items-center gap-2 font-semibold">
             {name}
-            {done && <span className="ml-2 text-sm text-emerald-300">✓</span>}
+            <button
+              onClick={() => setShowGuide(true)}
+              className="rounded-full border border-zinc-700 px-2 py-0.5 text-xs font-medium text-zinc-400 transition hover:border-emerald-400/60 hover:text-emerald-300"
+              title={`How to perform ${name}`}
+            >
+              How to
+            </button>
+            {done && <span className="text-sm text-emerald-300">✓</span>}
           </div>
           {target && (
             <div className="text-xs text-zinc-400">
@@ -382,6 +391,13 @@ function ExerciseCard({
             {busy ? "…" : "Log set"}
           </button>
         </div>
+      )}
+
+      {showGuide && (
+        <ExerciseGuideModal
+          exerciseName={name}
+          onClose={() => setShowGuide(false)}
+        />
       )}
     </div>
   );

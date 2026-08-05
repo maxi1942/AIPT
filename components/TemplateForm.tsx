@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import ExerciseGuideModal from "./ExerciseGuideModal";
 import type { Exercise } from "@/lib/types";
 
 interface FormExercise {
@@ -37,6 +38,7 @@ export default function TemplateForm({
   const [showCustom, setShowCustom] = useState(false);
   const [customName, setCustomName] = useState("");
   const [customGroup, setCustomGroup] = useState("Other");
+  const [guideFor, setGuideFor] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/exercises")
@@ -198,6 +200,15 @@ export default function TemplateForm({
                     <span className="ml-2 text-xs text-zinc-500">
                       {exercise?.muscle_group}
                     </span>
+                    {exercise && (
+                      <button
+                        onClick={() => setGuideFor(exercise.name)}
+                        className="ml-2 rounded-full border border-zinc-700 px-2 py-0.5 text-xs text-zinc-400 transition hover:border-emerald-400/60 hover:text-emerald-300"
+                        title={`How to perform ${exercise.name}`}
+                      >
+                        How to
+                      </button>
+                    )}
                   </div>
                   <div className="flex items-center gap-1 text-zinc-400">
                     <button
@@ -281,16 +292,27 @@ export default function TemplateForm({
                 </div>
               ) : (
                 filtered.slice(0, 20).map((e) => (
-                  <button
+                  <div
                     key={e.id}
-                    onClick={() => addExercise(e.id)}
-                    className="flex w-full items-center justify-between px-3 py-2 text-left text-sm hover:bg-zinc-800"
+                    className="flex w-full items-center justify-between px-3 py-2 text-sm hover:bg-zinc-800"
                   >
-                    <span>{e.name}</span>
-                    <span className="text-xs text-zinc-500">
-                      {e.muscle_group} · {e.equipment}
-                    </span>
-                  </button>
+                    <button
+                      onClick={() => addExercise(e.id)}
+                      className="grow text-left"
+                    >
+                      {e.name}
+                      <span className="ml-2 text-xs text-zinc-500">
+                        {e.muscle_group} · {e.equipment}
+                      </span>
+                    </button>
+                    <button
+                      onClick={() => setGuideFor(e.name)}
+                      className="ml-2 shrink-0 rounded-full border border-zinc-700 px-2 py-0.5 text-xs text-zinc-400 transition hover:border-emerald-400/60 hover:text-emerald-300"
+                      title={`How to perform ${e.name}`}
+                    >
+                      ?
+                    </button>
+                  </div>
                 ))
               )}
             </div>
@@ -377,6 +399,13 @@ export default function TemplateForm({
           Cancel
         </button>
       </div>
+
+      {guideFor && (
+        <ExerciseGuideModal
+          exerciseName={guideFor}
+          onClose={() => setGuideFor(null)}
+        />
+      )}
     </div>
   );
 }
