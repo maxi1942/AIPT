@@ -1,18 +1,41 @@
 import Database from "better-sqlite3";
 import fs from "fs";
+import os from "os";
 import path from "path";
-
-const DATA_DIR = path.join(process.cwd(), "data");
-const DB_PATH = path.join(DATA_DIR, "aipt.db");
 
 declare global {
   // eslint-disable-next-line no-var
   var __aiptDb: Database.Database | undefined;
 }
 
+/**
+ * Where the SQLite file lives. Prefers AIPT_DATA_DIR, then ./data, then a
+ * temp directory — the temp fallback keeps the app usable on hosts with a
+ * read-only project filesystem (e.g. serverless), at the cost of data not
+ * surviving restarts there.
+ */
+function resolveDataDir(): string {
+  const candidates = [
+    process.env.AIPT_DATA_DIR,
+    path.join(process.cwd(), "data"),
+    path.join(os.tmpdir(), "aipt-data"),
+  ].filter((d): d is string => !!d);
+
+  for (const dir of candidates) {
+    try {
+      fs.mkdirSync(dir, { recursive: true });
+      fs.accessSync(dir, fs.constants.W_OK);
+      return dir;
+    } catch {
+      // not writable — try the next candidate
+    }
+  }
+  throw new Error("No writable directory found for the AIPT database");
+}
+
 function createDb(): Database.Database {
-  fs.mkdirSync(DATA_DIR, { recursive: true });
-  const db = new Database(DB_PATH);
+  const dbPath = path.join(resolveDataDir(), "aipt.db");
+  const db = new Database(dbPath);
   db.pragma("journal_mode = WAL");
   db.pragma("foreign_keys = ON");
   migrate(db);
