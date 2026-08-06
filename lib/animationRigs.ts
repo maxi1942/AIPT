@@ -15,6 +15,8 @@ export interface StaticShape {
   coords: [number, number, number, number];
 }
 
+export type WeightType = "plate" | "bigplate" | "dumbbell" | "wheel" | "handle";
+
 export interface Rig {
   /** Pairs of joint names to connect with limb strokes. */
   links: Array<[string, string]>;
@@ -22,6 +24,8 @@ export interface Rig {
   head: string;
   /** Joints that carry a weight (plate/dumbbell) circle. */
   weights?: string[];
+  /** What kind of equipment to draw at the weight joints. */
+  weightType?: WeightType;
   /** Non-moving scenery: floor, bench, bar to hang from. */
   staticShapes?: StaticShape[];
   /** Keyframes; the loop runs A → B → A with easing. */
@@ -29,6 +33,25 @@ export interface Rig {
   /** Seconds for a full A → B → A cycle. */
   dur?: number;
 }
+
+/** Equipment style per rig (rigs without weights are omitted). */
+const RIG_WEIGHT_TYPE: Record<string, WeightType> = {
+  squat: "plate",
+  hinge: "bigplate",
+  lunge: "dumbbell",
+  bench: "plate",
+  ohp: "plate",
+  row: "plate",
+  curl: "dumbbell",
+  triceps: "handle",
+  lateral: "dumbbell",
+  legext: "handle",
+  legcurl: "handle",
+  hipthrust: "plate",
+  calfraise: "dumbbell",
+  carry: "dumbbell",
+  rollout: "wheel",
+};
 
 const FLOOR: StaticShape = { type: "line", coords: [8, 91, 92, 91] };
 
@@ -591,5 +614,6 @@ const EXERCISE_RIG: Record<string, keyof typeof RIGS> = {
 
 export function getRigForExercise(name: string): Rig | null {
   const rigId = EXERCISE_RIG[name.trim().toLowerCase()];
-  return rigId ? RIGS[rigId] : null;
+  if (!rigId) return null;
+  return { ...RIGS[rigId], weightType: RIG_WEIGHT_TYPE[rigId] };
 }

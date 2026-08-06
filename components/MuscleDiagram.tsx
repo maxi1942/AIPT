@@ -1,11 +1,12 @@
 import type { MuscleId } from "@/lib/exerciseGuides";
+import { capsulePath, type Pt } from "@/lib/figure";
 
 type Level = "primary" | "secondary" | "none";
 
-const NEUTRAL = "#3f3f46";
-const OUTLINE = "#27272a";
+const NEUTRAL = "#46464e";
+const OUTLINE = "#1c1c21";
 const PRIMARY = "#34d399";
-const SECONDARY = "rgba(52, 211, 153, 0.35)";
+const SECONDARY = "rgba(52, 211, 153, 0.38)";
 
 function fillFor(level: Level): string {
   if (level === "primary") return PRIMARY;
@@ -14,8 +15,9 @@ function fillFor(level: Level): string {
 }
 
 /**
- * Stylized front + back body diagram with the muscles worked by an exercise
- * highlighted (solid = primary, translucent = secondary).
+ * Front + back body diagram with the muscles worked by an exercise
+ * highlighted (solid = primary, translucent = secondary). Limbs are drawn as
+ * tapered capsules so the figure reads as a body rather than a wireframe.
  */
 export default function MuscleDiagram({
   primary,
@@ -45,123 +47,146 @@ export default function MuscleDiagram({
   );
 }
 
-function FrontBody({ level }: { level: (m: MuscleId) => Level }) {
+function Limb({ a, b, ra, rb, fill }: { a: Pt; b: Pt; ra: number; rb: number; fill: string }) {
   return (
-    <svg viewBox="0 0 100 210" width="96" height="202" aria-hidden>
-      {/* head + neck */}
-      <circle cx="50" cy="13" r="9" fill={NEUTRAL} stroke={OUTLINE} />
-      <rect x="45" y="21" width="10" height="7" rx="2" fill={NEUTRAL} />
+    <path
+      d={capsulePath(a, b, ra, rb)}
+      fill={fill}
+      stroke={OUTLINE}
+      strokeWidth={0.7}
+    />
+  );
+}
 
-      {/* torso base */}
-      <path
-        d="M32 30 Q50 24 68 30 L66 78 Q50 86 34 78 Z"
-        fill={NEUTRAL}
-        stroke={OUTLINE}
-      />
+function HeadNeck() {
+  return (
+    <>
+      <circle cx="50" cy="13" r="9" fill={NEUTRAL} stroke={OUTLINE} strokeWidth={0.7} />
+      <rect x="45" y="21" width="10" height="7" rx="2.5" fill={NEUTRAL} />
+    </>
+  );
+}
 
-      {/* shoulders (front delts) */}
-      <ellipse cx="29" cy="35" rx="8" ry="6.5" fill={fillFor(level("shoulders"))} stroke={OUTLINE} />
-      <ellipse cx="71" cy="35" rx="8" ry="6.5" fill={fillFor(level("shoulders"))} stroke={OUTLINE} />
+function Torso() {
+  return (
+    <path
+      d="M31,30 C38,25 62,25 69,30 C70,44 68,58 63,74 C58,82 42,82 37,74 C32,58 30,44 31,30 Z"
+      fill={NEUTRAL}
+      stroke={OUTLINE}
+      strokeWidth={0.7}
+    />
+  );
+}
+
+function Pelvis() {
+  return (
+    <path
+      d="M37,77 C42,84 58,84 63,77 L61,93 C55,98 45,98 39,93 Z"
+      fill={NEUTRAL}
+      stroke={OUTLINE}
+      strokeWidth={0.7}
+    />
+  );
+}
+
+function Feet() {
+  return (
+    <>
+      <ellipse cx="40" cy="163" rx="4.5" ry="2.5" fill={NEUTRAL} />
+      <ellipse cx="60" cy="163" rx="4.5" ry="2.5" fill={NEUTRAL} />
+    </>
+  );
+}
+
+function FrontBody({ level }: { level: (m: MuscleId) => Level }) {
+  const shoulders = fillFor(level("shoulders"));
+  const biceps = fillFor(level("biceps"));
+  const forearms = fillFor(level("forearms"));
+  const quads = fillFor(level("quads"));
+
+  return (
+    <svg viewBox="0 0 100 172" width="96" height="165" aria-hidden>
+      <HeadNeck />
+      <Torso />
+      <Pelvis />
+
+      {/* legs — thigh capsule is the quads */}
+      <Limb a={[43, 86]} b={[41, 122]} ra={6.4} rb={4.4} fill={quads} />
+      <Limb a={[57, 86]} b={[59, 122]} ra={6.4} rb={4.4} fill={quads} />
+      <Limb a={[41, 122]} b={[42, 156]} ra={3.9} rb={2.6} fill={NEUTRAL} />
+      <Limb a={[59, 122]} b={[58, 156]} ra={3.9} rb={2.6} fill={NEUTRAL} />
+      <Feet />
+
+      {/* arms */}
+      <Limb a={[30, 36]} b={[23, 55]} ra={3.7} rb={2.9} fill={biceps} />
+      <Limb a={[70, 36]} b={[77, 55]} ra={3.7} rb={2.9} fill={biceps} />
+      <Limb a={[23, 55]} b={[19, 74]} ra={2.8} rb={2.1} fill={forearms} />
+      <Limb a={[77, 55]} b={[81, 74]} ra={2.8} rb={2.1} fill={forearms} />
+
+      {/* deltoids */}
+      <circle cx="30" cy="34" r="6.8" fill={shoulders} stroke={OUTLINE} strokeWidth={0.7} />
+      <circle cx="70" cy="34" r="6.8" fill={shoulders} stroke={OUTLINE} strokeWidth={0.7} />
 
       {/* chest */}
-      <ellipse cx="41" cy="44" rx="9.5" ry="7.5" fill={fillFor(level("chest"))} stroke={OUTLINE} />
-      <ellipse cx="59" cy="44" rx="9.5" ry="7.5" fill={fillFor(level("chest"))} stroke={OUTLINE} />
+      <ellipse cx="41" cy="45" rx="9" ry="7.5" fill={fillFor(level("chest"))} stroke={OUTLINE} strokeWidth={0.7} />
+      <ellipse cx="59" cy="45" rx="9" ry="7.5" fill={fillFor(level("chest"))} stroke={OUTLINE} strokeWidth={0.7} />
 
-      {/* abs / core */}
-      <rect x="42" y="54" width="16" height="24" rx="4" fill={fillFor(level("core"))} stroke={OUTLINE} />
-
-      {/* biceps */}
-      <ellipse cx="24" cy="53" rx="5" ry="9" fill={fillFor(level("biceps"))} stroke={OUTLINE} />
-      <ellipse cx="76" cy="53" rx="5" ry="9" fill={fillFor(level("biceps"))} stroke={OUTLINE} />
-
-      {/* forearms */}
-      <ellipse cx="20" cy="73" rx="4" ry="10" fill={fillFor(level("forearms"))} stroke={OUTLINE} />
-      <ellipse cx="80" cy="73" rx="4" ry="10" fill={fillFor(level("forearms"))} stroke={OUTLINE} />
-
-      {/* pelvis */}
-      <path d="M35 80 Q50 88 65 80 L62 95 Q50 100 38 95 Z" fill={NEUTRAL} stroke={OUTLINE} />
-
-      {/* quads */}
-      <ellipse cx="42" cy="115" rx="7.5" ry="20" fill={fillFor(level("quads"))} stroke={OUTLINE} />
-      <ellipse cx="58" cy="115" rx="7.5" ry="20" fill={fillFor(level("quads"))} stroke={OUTLINE} />
-
-      {/* lower legs (front — shins, neutral) */}
-      <ellipse cx="43" cy="160" rx="5" ry="17" fill={NEUTRAL} stroke={OUTLINE} />
-      <ellipse cx="57" cy="160" rx="5" ry="17" fill={NEUTRAL} stroke={OUTLINE} />
-
-      {/* feet */}
-      <ellipse cx="43" cy="182" rx="5" ry="3" fill={NEUTRAL} />
-      <ellipse cx="57" cy="182" rx="5" ry="3" fill={NEUTRAL} />
+      {/* abs */}
+      <rect x="42" y="55" width="16" height="24" rx="6" fill={fillFor(level("core"))} stroke={OUTLINE} strokeWidth={0.7} />
     </svg>
   );
 }
 
 function BackBody({ level }: { level: (m: MuscleId) => Level }) {
-  return (
-    <svg viewBox="0 0 100 210" width="96" height="202" aria-hidden>
-      {/* head + neck */}
-      <circle cx="50" cy="13" r="9" fill={NEUTRAL} stroke={OUTLINE} />
-      <rect x="45" y="21" width="10" height="7" rx="2" fill={NEUTRAL} />
+  const shoulders = fillFor(level("shoulders"));
+  const triceps = fillFor(level("triceps"));
+  const forearms = fillFor(level("forearms"));
+  const hamstrings = fillFor(level("hamstrings"));
+  const calves = fillFor(level("calves"));
 
-      {/* torso base */}
-      <path
-        d="M32 30 Q50 24 68 30 L66 78 Q50 86 34 78 Z"
-        fill={NEUTRAL}
-        stroke={OUTLINE}
-      />
+  return (
+    <svg viewBox="0 0 100 172" width="96" height="165" aria-hidden>
+      <HeadNeck />
+      <Torso />
 
       {/* traps */}
       <path
-        d="M40 28 Q50 24 60 28 L56 40 Q50 43 44 40 Z"
+        d="M40,27 Q50,23 60,27 L56,41 Q50,44 44,41 Z"
         fill={fillFor(level("traps"))}
         stroke={OUTLINE}
+        strokeWidth={0.7}
       />
 
-      {/* rear shoulders */}
-      <ellipse cx="29" cy="35" rx="8" ry="6.5" fill={fillFor(level("shoulders"))} stroke={OUTLINE} />
-      <ellipse cx="71" cy="35" rx="8" ry="6.5" fill={fillFor(level("shoulders"))} stroke={OUTLINE} />
-
-      {/* upper back (between shoulder blades) */}
-      <rect x="41" y="41" width="18" height="12" rx="3" fill={fillFor(level("upper_back"))} stroke={OUTLINE} />
+      {/* upper back */}
+      <rect x="40" y="42" width="20" height="13" rx="4" fill={fillFor(level("upper_back"))} stroke={OUTLINE} strokeWidth={0.7} />
 
       {/* lats */}
-      <path
-        d="M36 44 L42 55 L44 70 L37 66 Z"
-        fill={fillFor(level("lats"))}
-        stroke={OUTLINE}
-      />
-      <path
-        d="M64 44 L58 55 L56 70 L63 66 Z"
-        fill={fillFor(level("lats"))}
-        stroke={OUTLINE}
-      />
+      <path d="M36,45 L43,57 L45,72 L37,67 Z" fill={fillFor(level("lats"))} stroke={OUTLINE} strokeWidth={0.7} />
+      <path d="M64,45 L57,57 L55,72 L63,67 Z" fill={fillFor(level("lats"))} stroke={OUTLINE} strokeWidth={0.7} />
 
       {/* lower back */}
-      <rect x="44" y="64" width="12" height="13" rx="3" fill={fillFor(level("lower_back"))} stroke={OUTLINE} />
-
-      {/* triceps */}
-      <ellipse cx="24" cy="53" rx="5" ry="9" fill={fillFor(level("triceps"))} stroke={OUTLINE} />
-      <ellipse cx="76" cy="53" rx="5" ry="9" fill={fillFor(level("triceps"))} stroke={OUTLINE} />
-
-      {/* forearms */}
-      <ellipse cx="20" cy="73" rx="4" ry="10" fill={fillFor(level("forearms"))} stroke={OUTLINE} />
-      <ellipse cx="80" cy="73" rx="4" ry="10" fill={fillFor(level("forearms"))} stroke={OUTLINE} />
+      <rect x="44" y="63" width="12" height="14" rx="3.5" fill={fillFor(level("lower_back"))} stroke={OUTLINE} strokeWidth={0.7} />
 
       {/* glutes */}
-      <ellipse cx="43" cy="88" rx="8" ry="7" fill={fillFor(level("glutes"))} stroke={OUTLINE} />
-      <ellipse cx="57" cy="88" rx="8" ry="7" fill={fillFor(level("glutes"))} stroke={OUTLINE} />
+      <ellipse cx="43" cy="86" rx="8" ry="7" fill={fillFor(level("glutes"))} stroke={OUTLINE} strokeWidth={0.7} />
+      <ellipse cx="57" cy="86" rx="8" ry="7" fill={fillFor(level("glutes"))} stroke={OUTLINE} strokeWidth={0.7} />
 
-      {/* hamstrings */}
-      <ellipse cx="42" cy="115" rx="7" ry="18" fill={fillFor(level("hamstrings"))} stroke={OUTLINE} />
-      <ellipse cx="58" cy="115" rx="7" ry="18" fill={fillFor(level("hamstrings"))} stroke={OUTLINE} />
+      {/* legs — thigh capsule is the hamstrings, shin is the calves */}
+      <Limb a={[43, 92]} b={[41, 124]} ra={6} rb={4.3} fill={hamstrings} />
+      <Limb a={[57, 92]} b={[59, 124]} ra={6} rb={4.3} fill={hamstrings} />
+      <Limb a={[41, 124]} b={[42, 156]} ra={3.9} rb={2.6} fill={calves} />
+      <Limb a={[59, 124]} b={[58, 156]} ra={3.9} rb={2.6} fill={calves} />
+      <Feet />
 
-      {/* calves */}
-      <ellipse cx="43" cy="155" rx="5.5" ry="13" fill={fillFor(level("calves"))} stroke={OUTLINE} />
-      <ellipse cx="57" cy="155" rx="5.5" ry="13" fill={fillFor(level("calves"))} stroke={OUTLINE} />
+      {/* arms — upper arm is the triceps from behind */}
+      <Limb a={[30, 36]} b={[23, 55]} ra={3.7} rb={2.9} fill={triceps} />
+      <Limb a={[70, 36]} b={[77, 55]} ra={3.7} rb={2.9} fill={triceps} />
+      <Limb a={[23, 55]} b={[19, 74]} ra={2.8} rb={2.1} fill={forearms} />
+      <Limb a={[77, 55]} b={[81, 74]} ra={2.8} rb={2.1} fill={forearms} />
 
-      {/* feet */}
-      <ellipse cx="43" cy="182" rx="5" ry="3" fill={NEUTRAL} />
-      <ellipse cx="57" cy="182" rx="5" ry="3" fill={NEUTRAL} />
+      {/* rear deltoids */}
+      <circle cx="30" cy="34" r="6.8" fill={shoulders} stroke={OUTLINE} strokeWidth={0.7} />
+      <circle cx="70" cy="34" r="6.8" fill={shoulders} stroke={OUTLINE} strokeWidth={0.7} />
     </svg>
   );
 }
