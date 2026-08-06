@@ -4,10 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import { getRigForExercise, type Pose, type Rig, type WeightType } from "@/lib/animationRigs";
 import { capsulePath, type Pt } from "@/lib/figure";
 
-const SCENERY = "#3f3f46";
-const ACCENT = "#34d399";
-const IRON = "#2e2e35";
-const HUB = "#18181b";
+const SCENERY = "#a1a1aa";
+const ACCENT = "#10b981";
+const IRON = "#3f3f46";
+const HUB = "#fafafa";
 
 /** Limb radii and body-part category per joint pair (by base joint names). */
 interface PairSpec {
@@ -173,16 +173,16 @@ function RigPlayer({ rig }: { rig: Rig }) {
     <svg viewBox="0 0 100 100" width="150" height="150" aria-hidden>
       <defs>
         <linearGradient id="figNear" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#e7e7ea" />
-          <stop offset="100%" stopColor="#a3a3ad" />
+          <stop offset="0%" stopColor="#82828c" />
+          <stop offset="100%" stopColor="#54545e" />
         </linearGradient>
         <linearGradient id="figTorso" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#d6d6db" />
-          <stop offset="100%" stopColor="#8f8f9a" />
+          <stop offset="0%" stopColor="#9d9da6" />
+          <stop offset="100%" stopColor="#6e6e78" />
         </linearGradient>
         <linearGradient id="figFar" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#5d5d66" />
-          <stop offset="100%" stopColor="#44444c" />
+          <stop offset="0%" stopColor="#d6d6db" />
+          <stop offset="100%" stopColor="#bcbcc4" />
         </linearGradient>
         <radialGradient id="figGlow">
           <stop offset="0%" stopColor={ACCENT} stopOpacity="0.85" />
@@ -198,7 +198,7 @@ function RigPlayer({ rig }: { rig: Rig }) {
           rx={shadowRx}
           ry={1.9}
           fill="#000"
-          opacity={0.4}
+          opacity={0.12}
         />
       )}
 
@@ -325,7 +325,7 @@ function Equipment({ at, type }: { at: Pt; type: WeightType }) {
             y1={y}
             x2={x + 3.4}
             y2={y}
-            stroke="#8f8f9a"
+            stroke="#6e6e78"
             strokeWidth={1.4}
             strokeLinecap="round"
           />
@@ -336,7 +336,7 @@ function Equipment({ at, type }: { at: Pt; type: WeightType }) {
     case "wheel":
       return (
         <g>
-          <circle cx={x} cy={y} r={4} fill="#52525b" stroke={ACCENT} strokeWidth={0.9} />
+          <circle cx={x} cy={y} r={4} fill="#71717a" stroke={ACCENT} strokeWidth={0.9} />
           <circle cx={x} cy={y} r={1.3} fill={HUB} />
         </g>
       );

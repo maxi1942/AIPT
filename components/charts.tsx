@@ -32,7 +32,7 @@ function formatNum(v: number): string {
 /** Single-series line chart with crosshair + tooltip. */
 export function LineChart({
   data,
-  color = "#7dd3fc",
+  color = "#0284c7",
   unit = "",
 }: {
   data: ChartPoint[];
@@ -95,7 +95,7 @@ export function LineChart({
               x2={W - PAD.right}
               y1={y(t)}
               y2={y(t)}
-              stroke="#27272a"
+              stroke="#e4e4e7"
               strokeWidth={1}
             />
             <text
@@ -130,7 +130,7 @@ export function LineChart({
             x2={x(hover)}
             y1={PAD.top}
             y2={H - PAD.bottom}
-            stroke="#52525b"
+            stroke="#a1a1aa"
             strokeWidth={1}
             strokeDasharray="3 3"
           />
@@ -145,7 +145,7 @@ export function LineChart({
             cy={y(d.value)}
             r={hover === i ? 5 : data.length <= 20 ? 3 : 0}
             fill={color}
-            stroke="#18181b"
+            stroke="#ffffff"
             strokeWidth={2}
           />
         ))}
@@ -153,14 +153,14 @@ export function LineChart({
 
       {h && hover != null && (
         <div
-          className="pointer-events-none absolute -translate-x-1/2 rounded-md border border-zinc-700 bg-zinc-950 px-2.5 py-1.5 text-xs shadow-lg"
+          className="pointer-events-none absolute -translate-x-1/2 rounded-md border border-zinc-300 bg-white shadow-md px-2.5 py-1.5 text-xs shadow-lg"
           style={{
             left: `${(x(hover) / W) * 100}%`,
             top: `${(y(h.value) / H) * 100 - 16}%`,
           }}
         >
           <div className="text-zinc-400">{h.label}</div>
-          <div className="font-semibold tabular-nums text-zinc-100">
+          <div className="font-semibold tabular-nums text-zinc-900">
             {h.value.toLocaleString()}
             {unit ? ` ${unit}` : ""}
           </div>
@@ -173,7 +173,7 @@ export function LineChart({
 /** Single-series bar chart with rounded data-ends and hover tooltip. */
 export function BarChart({
   data,
-  color = "#34d399",
+  color = "#10b981",
   unit = "",
 }: {
   data: ChartPoint[];
@@ -210,7 +210,7 @@ export function BarChart({
               x2={W - PAD.right}
               y1={y(t)}
               y2={y(t)}
-              stroke="#27272a"
+              stroke="#e4e4e7"
               strokeWidth={1}
             />
             <text
@@ -273,14 +273,14 @@ export function BarChart({
 
       {h && hover != null && (
         <div
-          className="pointer-events-none absolute -translate-x-1/2 rounded-md border border-zinc-700 bg-zinc-950 px-2.5 py-1.5 text-xs shadow-lg"
+          className="pointer-events-none absolute -translate-x-1/2 rounded-md border border-zinc-300 bg-white shadow-md px-2.5 py-1.5 text-xs shadow-lg"
           style={{
             left: `${(hoverX / W) * 100}%`,
             top: `${(y(h.value) / H) * 100 - 16}%`,
           }}
         >
           <div className="text-zinc-400">{h.label}</div>
-          <div className="font-semibold tabular-nums text-zinc-100">
+          <div className="font-semibold tabular-nums text-zinc-900">
             {h.value.toLocaleString()}
             {unit ? ` ${unit}` : ""}
           </div>

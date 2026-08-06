@@ -23,7 +23,7 @@ export default function DeleteTemplateButton({
     <button
       onClick={remove}
       disabled={busy}
-      className="rounded-md border border-zinc-700 px-3 py-1.5 text-sm text-red-400 hover:bg-red-500/10 disabled:opacity-50"
+      className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 disabled:opacity-50"
     >
       Delete
     </button>

@@ -1,16 +1,16 @@
 @import "tailwindcss";
 
 :root {
-  --background: #09090b;
-  --surface: #18181b;
-  --border: #27272a;
-  --ink: #fafafa;
-  --ink-secondary: #a1a1aa;
-  --accent: #34d399;
+  --background: #fafafa;
+  --surface: #ffffff;
+  --border: #e4e4e7;
+  --ink: #18181b;
+  --ink-secondary: #52525b;
+  --accent: #10b981;
 }
 
 html {
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 body {
@@ -21,5 +21,5 @@ body {
 }
 
 ::selection {
-  background: rgba(52, 211, 153, 0.3);
+  background: rgba(16, 185, 129, 0.25);
 }

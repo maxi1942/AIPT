@@ -21,7 +21,7 @@ export default function StatsPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Stats</h1>
-        <p className="mt-1 text-sm text-zinc-400">
+        <p className="mt-1 text-sm text-zinc-500">
           Everything you&apos;ve logged, aggregated: weekly volume and
           per-exercise progression.
         </p>
@@ -44,8 +44,8 @@ export default function StatsPage() {
 
 function Tile({ label, value }: { label: string; value: number | string }) {
   return (
-    <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-4">
-      <div className="text-xs text-zinc-400">{label}</div>
+    <div className="rounded-lg border border-zinc-200 bg-white p-4">
+      <div className="text-xs text-zinc-500">{label}</div>
       <div className="mt-1 text-xl font-bold tabular-nums">{value}</div>
     </div>
   );

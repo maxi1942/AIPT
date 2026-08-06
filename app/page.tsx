@@ -48,7 +48,7 @@ export default function DashboardPage() {
     <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-bold">Dashboard</h1>
-        <p className="mt-1 text-sm text-zinc-400">
+        <p className="mt-1 text-sm text-zinc-500">
           Design a workout, start training, and let your AI trainer push you
           forward.
         </p>
@@ -57,33 +57,33 @@ export default function DashboardPage() {
       {!hasProfile && (
         <Link
           href="/profile"
-          className="flex items-center justify-between rounded-lg border border-sky-400/40 bg-sky-400/10 px-4 py-3 transition hover:bg-sky-400/20"
+          className="flex items-center justify-between rounded-lg border border-sky-300 bg-sky-50 px-4 py-3 transition hover:bg-sky-100"
         >
           <div>
-            <div className="text-sm font-semibold text-sky-300">
+            <div className="text-sm font-semibold text-sky-700">
               Set up your profile
             </div>
-            <div className="text-sm text-zinc-300">
+            <div className="text-sm text-zinc-700">
               Pick your goal and schedule — AIPT generates your weekly plan and
               tailors the AI trainer to you.
             </div>
           </div>
-          <span className="text-sm font-semibold text-sky-300">Start →</span>
+          <span className="text-sm font-semibold text-sky-700">Start →</span>
         </Link>
       )}
 
       {activeSession && (
         <Link
           href={`/workout/${activeSession.id}`}
-          className="flex items-center justify-between rounded-lg border border-emerald-400/40 bg-emerald-400/10 px-4 py-3 transition hover:bg-emerald-400/20"
+          className="flex items-center justify-between rounded-lg border border-emerald-300 bg-emerald-50 px-4 py-3 transition hover:bg-emerald-100"
         >
           <div>
-            <div className="text-sm font-semibold text-emerald-300">
+            <div className="text-sm font-semibold text-emerald-700">
               Workout in progress
             </div>
-            <div className="text-sm text-zinc-300">{activeSession.name}</div>
+            <div className="text-sm text-zinc-700">{activeSession.name}</div>
           </div>
-          <span className="text-sm font-semibold text-emerald-300">
+          <span className="text-sm font-semibold text-emerald-700">
             Resume →
           </span>
         </Link>
@@ -104,19 +104,19 @@ export default function DashboardPage() {
           <h2 className="text-lg font-semibold">Your workouts</h2>
           <Link
             href="/templates/new"
-            className="text-sm font-medium text-emerald-300 hover:text-emerald-200"
+            className="text-sm font-medium text-emerald-700 hover:text-emerald-600"
           >
             + New workout
           </Link>
         </div>
         {templates.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-zinc-700 p-8 text-center">
-            <p className="text-zinc-400">
+          <div className="rounded-lg border border-dashed border-zinc-300 p-8 text-center">
+            <p className="text-zinc-500">
               No workouts yet. Design your first one to get started.
             </p>
             <Link
               href="/templates/new"
-              className="mt-4 inline-block rounded-md bg-emerald-400 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-300"
+              className="mt-4 inline-block rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-500"
             >
               Design a workout
             </Link>
@@ -126,16 +126,16 @@ export default function DashboardPage() {
             {templates.map((t) => (
               <div
                 key={t.id}
-                className="flex flex-col justify-between rounded-lg border border-zinc-800 bg-zinc-900 p-4"
+                className="flex flex-col justify-between rounded-lg border border-zinc-200 bg-white p-4"
               >
                 <div>
                   <div className="font-semibold">{t.name}</div>
-                  <div className="mt-1 text-xs text-zinc-400">
+                  <div className="mt-1 text-xs text-zinc-500">
                     {t.exercise_count} exercise
                     {t.exercise_count === 1 ? "" : "s"}
                   </div>
                   {t.description && (
-                    <p className="mt-2 line-clamp-2 text-sm text-zinc-400">
+                    <p className="mt-2 line-clamp-2 text-sm text-zinc-500">
                       {t.description}
                     </p>
                   )}
@@ -154,30 +154,30 @@ export default function DashboardPage() {
           <h2 className="text-lg font-semibold">Recent sessions</h2>
           <Link
             href="/history"
-            className="text-sm font-medium text-emerald-300 hover:text-emerald-200"
+            className="text-sm font-medium text-emerald-700 hover:text-emerald-600"
           >
             View all
           </Link>
         </div>
         {recentSessions.length === 0 ? (
-          <p className="text-sm text-zinc-400">
+          <p className="text-sm text-zinc-500">
             Nothing logged yet — your finished workouts will show up here.
           </p>
         ) : (
-          <div className="divide-y divide-zinc-800 rounded-lg border border-zinc-800 bg-zinc-900">
+          <div className="divide-y divide-zinc-200 rounded-lg border border-zinc-200 bg-white">
             {recentSessions.map((s) => (
               <Link
                 key={s.id}
                 href={`/history/${s.id}`}
-                className="flex items-center justify-between px-4 py-3 transition hover:bg-zinc-800/50"
+                className="flex items-center justify-between px-4 py-3 transition hover:bg-zinc-50"
               >
                 <div>
                   <div className="text-sm font-medium">{s.name}</div>
-                  <div className="text-xs text-zinc-400">
+                  <div className="text-xs text-zinc-500">
                     {s.started_at.slice(0, 10)}
                   </div>
                 </div>
-                <div className="text-right text-xs text-zinc-400">
+                <div className="text-right text-xs text-zinc-500">
                   <div>{s.set_count} sets</div>
                   <div>{formatVolume(s.total_volume)} kg</div>
                 </div>
@@ -192,8 +192,8 @@ export default function DashboardPage() {
 
 function StatTile({ label, value }: { label: string; value: number | string }) {
   return (
-    <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-4">
-      <div className="text-xs text-zinc-400">{label}</div>
+    <div className="rounded-lg border border-zinc-200 bg-white p-4">
+      <div className="text-xs text-zinc-500">{label}</div>
       <div className="mt-1 text-2xl font-bold tabular-nums">{value}</div>
     </div>
   );

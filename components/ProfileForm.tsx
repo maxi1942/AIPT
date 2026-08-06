@@ -88,7 +88,7 @@ export default function ProfileForm({
 
   return (
     <div className="space-y-6">
-      <section className="rounded-lg border border-zinc-800 bg-zinc-900 p-5">
+      <section className="rounded-lg border border-zinc-200 bg-white p-5">
         <h2 className="font-semibold">Your goal</h2>
         <div className="mt-3 grid gap-2 sm:grid-cols-2">
           {GOAL_OPTIONS.map((g) => (
@@ -97,26 +97,26 @@ export default function ProfileForm({
               onClick={() => setGoal(g.value)}
               className={`rounded-lg border p-3 text-left transition ${
                 goal === g.value
-                  ? "border-emerald-400 bg-emerald-400/10"
-                  : "border-zinc-700 hover:border-zinc-500"
+                  ? "border-emerald-500 bg-emerald-50"
+                  : "border-zinc-300 hover:border-zinc-400"
               }`}
             >
               <div className="text-sm font-semibold">{g.label}</div>
-              <div className="mt-0.5 text-xs text-zinc-400">{g.hint}</div>
+              <div className="mt-0.5 text-xs text-zinc-500">{g.hint}</div>
             </button>
           ))}
         </div>
       </section>
 
-      <section className="rounded-lg border border-zinc-800 bg-zinc-900 p-5">
+      <section className="rounded-lg border border-zinc-200 bg-white p-5">
         <h2 className="font-semibold">Training setup</h2>
         <div className="mt-3 grid gap-4 sm:grid-cols-3">
           <div>
-            <label className="mb-1 block text-sm text-zinc-300">Experience</label>
+            <label className="mb-1 block text-sm text-zinc-700">Experience</label>
             <select
               value={experience}
               onChange={(e) => setExperience(e.target.value as typeof experience)}
-              className="w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm outline-none focus:border-emerald-400"
+              className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-500"
             >
               <option value="beginner">Beginner (&lt; 1 year)</option>
               <option value="intermediate">Intermediate (1-3 years)</option>
@@ -124,11 +124,11 @@ export default function ProfileForm({
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-sm text-zinc-300">Days per week</label>
+            <label className="mb-1 block text-sm text-zinc-700">Days per week</label>
             <select
               value={daysPerWeek}
               onChange={(e) => setDaysPerWeek(Number(e.target.value))}
-              className="w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm outline-none focus:border-emerald-400"
+              className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-500"
             >
               {[2, 3, 4, 5, 6].map((d) => (
                 <option key={d} value={d}>
@@ -138,11 +138,11 @@ export default function ProfileForm({
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-sm text-zinc-300">Equipment</label>
+            <label className="mb-1 block text-sm text-zinc-700">Equipment</label>
             <select
               value={equipment}
               onChange={(e) => setEquipment(e.target.value as typeof equipment)}
-              className="w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm outline-none focus:border-emerald-400"
+              className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-500"
             >
               <option value="full_gym">Full gym</option>
               <option value="dumbbells">Dumbbells only</option>
@@ -152,44 +152,44 @@ export default function ProfileForm({
         </div>
       </section>
 
-      <section className="rounded-lg border border-zinc-800 bg-zinc-900 p-5">
+      <section className="rounded-lg border border-zinc-200 bg-white p-5">
         <h2 className="font-semibold">
           About you <span className="text-sm font-normal text-zinc-500">(optional — helps the AI trainer)</span>
         </h2>
         <div className="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-4">
           <div>
-            <label className="mb-1 block text-sm text-zinc-300">Age</label>
+            <label className="mb-1 block text-sm text-zinc-700">Age</label>
             <input
               type="number"
               value={age}
               onChange={(e) => setAge(e.target.value)}
-              className="w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm outline-none focus:border-emerald-400"
+              className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-500"
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm text-zinc-300">Height (cm)</label>
+            <label className="mb-1 block text-sm text-zinc-700">Height (cm)</label>
             <input
               type="number"
               value={heightCm}
               onChange={(e) => setHeightCm(e.target.value)}
-              className="w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm outline-none focus:border-emerald-400"
+              className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-500"
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm text-zinc-300">Weight (kg)</label>
+            <label className="mb-1 block text-sm text-zinc-700">Weight (kg)</label>
             <input
               type="number"
               value={weightKg}
               onChange={(e) => setWeightKg(e.target.value)}
-              className="w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm outline-none focus:border-emerald-400"
+              className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-500"
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm text-zinc-300">Sex</label>
+            <label className="mb-1 block text-sm text-zinc-700">Sex</label>
             <select
               value={sex}
               onChange={(e) => setSex(e.target.value)}
-              className="w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm outline-none focus:border-emerald-400"
+              className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-500"
             >
               <option value="">—</option>
               <option value="male">Male</option>
@@ -201,7 +201,7 @@ export default function ProfileForm({
       </section>
 
       {error && (
-        <div className="rounded-md border border-red-500/40 bg-red-500/10 px-4 py-2 text-sm text-red-300">
+        <div className="rounded-md border border-red-300 bg-red-50 px-4 py-2 text-sm text-red-700">
           {error}
         </div>
       )}
@@ -210,18 +210,18 @@ export default function ProfileForm({
         <button
           onClick={handleSaveAndGenerate}
           disabled={busy !== null}
-          className="rounded-md bg-emerald-400 px-5 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-300 disabled:opacity-50"
+          className="rounded-md bg-emerald-600 px-5 py-2 text-sm font-semibold text-white hover:bg-emerald-500 disabled:opacity-50"
         >
           {busy === "plan" ? "Generating…" : "Save & generate weekly plan"}
         </button>
         <button
           onClick={handleSave}
           disabled={busy !== null}
-          className="rounded-md border border-zinc-700 px-5 py-2 text-sm text-zinc-300 hover:bg-zinc-800 disabled:opacity-50"
+          className="rounded-md border border-zinc-300 px-5 py-2 text-sm text-zinc-700 hover:bg-zinc-100 disabled:opacity-50"
         >
           {busy === "save" ? "Saving…" : "Save profile only"}
         </button>
-        {saved && <span className="text-sm text-emerald-300">Saved ✓</span>}
+        {saved && <span className="text-sm text-emerald-700">Saved ✓</span>}
       </div>
       <p className="text-xs text-zinc-500">
         The generated plan appears under Workouts as normal editable workout

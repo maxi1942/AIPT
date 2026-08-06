@@ -32,20 +32,20 @@ export default function TemplatesPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Workouts</h1>
-          <p className="mt-1 text-sm text-zinc-400">
+          <p className="mt-1 text-sm text-zinc-500">
             Your standard workout designs. Start one to begin a live session.
           </p>
         </div>
         <Link
           href="/templates/new"
-          className="rounded-md bg-emerald-400 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-300"
+          className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-500"
         >
           + New workout
         </Link>
       </div>
 
       {templates.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-zinc-700 p-10 text-center text-zinc-400">
+        <div className="rounded-lg border border-dashed border-zinc-300 p-10 text-center text-zinc-500">
           No workouts designed yet.
         </div>
       ) : (
@@ -55,13 +55,13 @@ export default function TemplatesPage() {
             return (
               <div
                 key={t.id}
-                className="rounded-lg border border-zinc-800 bg-zinc-900 p-5"
+                className="rounded-lg border border-zinc-200 bg-white p-5"
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <h2 className="text-lg font-semibold">{t.name}</h2>
                     {t.description && (
-                      <p className="mt-1 text-sm text-zinc-400">
+                      <p className="mt-1 text-sm text-zinc-500">
                         {t.description}
                       </p>
                     )}
@@ -70,7 +70,7 @@ export default function TemplatesPage() {
                     <StartWorkoutButton templateId={t.id} />
                     <Link
                       href={`/templates/${t.id}/edit`}
-                      className="rounded-md border border-zinc-700 px-3 py-1.5 text-sm text-zinc-300 hover:bg-zinc-800"
+                      className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-700 hover:bg-zinc-100"
                     >
                       Edit
                     </Link>
@@ -81,10 +81,10 @@ export default function TemplatesPage() {
                   {exercises.map((te) => (
                     <li
                       key={te.id}
-                      className="flex items-center justify-between rounded-md bg-zinc-950/60 px-3 py-2 text-sm"
+                      className="flex items-center justify-between rounded-md bg-zinc-100/80 px-3 py-2 text-sm"
                     >
                       <span>{te.exercise_name}</span>
-                      <span className="text-zinc-400">
+                      <span className="text-zinc-500">
                         {te.target_sets} × {te.target_reps}
                         {te.target_weight != null
                           ? ` @ ${te.target_weight} kg`

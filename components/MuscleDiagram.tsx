@@ -3,10 +3,10 @@ import { capsulePath, type Pt } from "@/lib/figure";
 
 type Level = "primary" | "secondary" | "none";
 
-const NEUTRAL = "#46464e";
-const OUTLINE = "#1c1c21";
-const PRIMARY = "#34d399";
-const SECONDARY = "rgba(52, 211, 153, 0.38)";
+const NEUTRAL = "#d4d4d8";
+const OUTLINE = "#ffffff";
+const PRIMARY = "#10b981";
+const SECONDARY = "rgba(16, 185, 129, 0.35)";
 
 function fillFor(level: Level): string {
   if (level === "primary") return PRIMARY;

@@ -28,7 +28,7 @@ export default async function EditTemplatePage({
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Edit workout</h1>
-        <p className="mt-1 text-sm text-zinc-400">{template.name}</p>
+        <p className="mt-1 text-sm text-zinc-500">{template.name}</p>
       </div>
       <TemplateForm
         templateId={template.id}

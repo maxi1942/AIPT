@@ -153,20 +153,20 @@ export default function TemplateForm({
 
   return (
     <div className="space-y-6">
-      <div className="space-y-4 rounded-lg border border-zinc-800 bg-zinc-900 p-5">
+      <div className="space-y-4 rounded-lg border border-zinc-200 bg-white p-5">
         <div>
-          <label className="mb-1 block text-sm font-medium text-zinc-300">
+          <label className="mb-1 block text-sm font-medium text-zinc-700">
             Workout name
           </label>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="e.g. Push Day A"
-            className="w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm outline-none focus:border-emerald-400"
+            className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-500"
           />
         </div>
         <div>
-          <label className="mb-1 block text-sm font-medium text-zinc-300">
+          <label className="mb-1 block text-sm font-medium text-zinc-700">
             Description <span className="text-zinc-500">(optional)</span>
           </label>
           <textarea
@@ -174,15 +174,15 @@ export default function TemplateForm({
             onChange={(e) => setDescription(e.target.value)}
             rows={2}
             placeholder="Focus, tempo notes, anything future-you should know"
-            className="w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm outline-none focus:border-emerald-400"
+            className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-500"
           />
         </div>
       </div>
 
-      <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-5">
+      <div className="rounded-lg border border-zinc-200 bg-white p-5">
         <h2 className="font-semibold">Exercises</h2>
         {rows.length === 0 && (
-          <p className="mt-2 text-sm text-zinc-400">
+          <p className="mt-2 text-sm text-zinc-500">
             No exercises yet — search the library below to add some.
           </p>
         )}
@@ -192,7 +192,7 @@ export default function TemplateForm({
             return (
               <div
                 key={`${row.exercise_id}-${i}`}
-                className="rounded-md border border-zinc-800 bg-zinc-950/60 p-3"
+                className="rounded-md border border-zinc-200 bg-zinc-100/80 p-3"
               >
                 <div className="flex items-center justify-between">
                   <div className="text-sm font-medium">
@@ -203,31 +203,31 @@ export default function TemplateForm({
                     {exercise && (
                       <button
                         onClick={() => setGuideFor(exercise.name)}
-                        className="ml-2 rounded-full border border-zinc-700 px-2 py-0.5 text-xs text-zinc-400 transition hover:border-emerald-400/60 hover:text-emerald-300"
+                        className="ml-2 rounded-full border border-zinc-300 px-2 py-0.5 text-xs text-zinc-500 transition hover:border-emerald-500/60 hover:text-emerald-600"
                         title={`How to perform ${exercise.name}`}
                       >
                         How to
                       </button>
                     )}
                   </div>
-                  <div className="flex items-center gap-1 text-zinc-400">
+                  <div className="flex items-center gap-1 text-zinc-500">
                     <button
                       onClick={() => moveRow(i, -1)}
-                      className="rounded px-2 py-1 hover:bg-zinc-800"
+                      className="rounded px-2 py-1 hover:bg-zinc-100"
                       aria-label="Move up"
                     >
                       ↑
                     </button>
                     <button
                       onClick={() => moveRow(i, 1)}
-                      className="rounded px-2 py-1 hover:bg-zinc-800"
+                      className="rounded px-2 py-1 hover:bg-zinc-100"
                       aria-label="Move down"
                     >
                       ↓
                     </button>
                     <button
                       onClick={() => removeRow(i)}
-                      className="rounded px-2 py-1 text-red-400 hover:bg-red-500/10"
+                      className="rounded px-2 py-1 text-red-600 hover:bg-red-50"
                       aria-label="Remove"
                     >
                       ✕
@@ -274,18 +274,18 @@ export default function TemplateForm({
           })}
         </div>
 
-        <div className="mt-5 border-t border-zinc-800 pt-4">
-          <label className="mb-1 block text-sm font-medium text-zinc-300">
+        <div className="mt-5 border-t border-zinc-200 pt-4">
+          <label className="mb-1 block text-sm font-medium text-zinc-700">
             Add from library
           </label>
           <input
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
             placeholder="Search exercises (e.g. squat, chest…)"
-            className="w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm outline-none focus:border-emerald-400"
+            className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-500"
           />
           {filter && (
-            <div className="mt-2 max-h-56 overflow-y-auto rounded-md border border-zinc-800">
+            <div className="mt-2 max-h-56 overflow-y-auto rounded-md border border-zinc-200">
               {filtered.length === 0 ? (
                 <div className="px-3 py-2 text-sm text-zinc-500">
                   No matches.
@@ -294,7 +294,7 @@ export default function TemplateForm({
                 filtered.slice(0, 20).map((e) => (
                   <div
                     key={e.id}
-                    className="flex w-full items-center justify-between px-3 py-2 text-sm hover:bg-zinc-800"
+                    className="flex w-full items-center justify-between px-3 py-2 text-sm hover:bg-zinc-100"
                   >
                     <button
                       onClick={() => addExercise(e.id)}
@@ -307,7 +307,7 @@ export default function TemplateForm({
                     </button>
                     <button
                       onClick={() => setGuideFor(e.name)}
-                      className="ml-2 shrink-0 rounded-full border border-zinc-700 px-2 py-0.5 text-xs text-zinc-400 transition hover:border-emerald-400/60 hover:text-emerald-300"
+                      className="ml-2 shrink-0 rounded-full border border-zinc-300 px-2 py-0.5 text-xs text-zinc-500 transition hover:border-emerald-500/60 hover:text-emerald-600"
                       title={`How to perform ${e.name}`}
                     >
                       ?
@@ -321,23 +321,23 @@ export default function TemplateForm({
             {showCustom ? (
               <div className="flex flex-wrap items-end gap-2">
                 <div className="grow">
-                  <label className="mb-1 block text-xs text-zinc-400">
+                  <label className="mb-1 block text-xs text-zinc-500">
                     Custom exercise name
                   </label>
                   <input
                     value={customName}
                     onChange={(e) => setCustomName(e.target.value)}
-                    className="w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm outline-none focus:border-emerald-400"
+                    className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-500"
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs text-zinc-400">
+                  <label className="mb-1 block text-xs text-zinc-500">
                     Muscle group
                   </label>
                   <select
                     value={customGroup}
                     onChange={(e) => setCustomGroup(e.target.value)}
-                    className="rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm outline-none focus:border-emerald-400"
+                    className="rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-500"
                   >
                     {[
                       "Chest",
@@ -355,13 +355,13 @@ export default function TemplateForm({
                 </div>
                 <button
                   onClick={addCustomExercise}
-                  className="rounded-md bg-zinc-700 px-3 py-2 text-sm font-medium hover:bg-zinc-600"
+                  className="rounded-md bg-zinc-200 px-3 py-2 text-sm font-medium text-zinc-800 hover:bg-zinc-300"
                 >
                   Add
                 </button>
                 <button
                   onClick={() => setShowCustom(false)}
-                  className="rounded-md px-3 py-2 text-sm text-zinc-400 hover:bg-zinc-800"
+                  className="rounded-md px-3 py-2 text-sm text-zinc-500 hover:bg-zinc-100"
                 >
                   Cancel
                 </button>
@@ -369,7 +369,7 @@ export default function TemplateForm({
             ) : (
               <button
                 onClick={() => setShowCustom(true)}
-                className="text-sm text-emerald-300 hover:text-emerald-200"
+                className="text-sm text-emerald-700 hover:text-emerald-600"
               >
                 + Can&apos;t find it? Add a custom exercise
               </button>
@@ -379,7 +379,7 @@ export default function TemplateForm({
       </div>
 
       {error && (
-        <div className="rounded-md border border-red-500/40 bg-red-500/10 px-4 py-2 text-sm text-red-300">
+        <div className="rounded-md border border-red-300 bg-red-50 px-4 py-2 text-sm text-red-700">
           {error}
         </div>
       )}
@@ -388,13 +388,13 @@ export default function TemplateForm({
         <button
           onClick={save}
           disabled={saving}
-          className="rounded-md bg-emerald-400 px-5 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-300 disabled:opacity-50"
+          className="rounded-md bg-emerald-600 px-5 py-2 text-sm font-semibold text-white hover:bg-emerald-500 disabled:opacity-50"
         >
           {saving ? "Saving…" : templateId ? "Save changes" : "Create workout"}
         </button>
         <button
           onClick={() => router.back()}
-          className="rounded-md border border-zinc-700 px-5 py-2 text-sm text-zinc-300 hover:bg-zinc-800"
+          className="rounded-md border border-zinc-300 px-5 py-2 text-sm text-zinc-700 hover:bg-zinc-100"
         >
           Cancel
         </button>
@@ -425,13 +425,13 @@ function LabeledInput({
 }) {
   return (
     <div>
-      <label className="mb-1 block text-xs text-zinc-400">{label}</label>
+      <label className="mb-1 block text-xs text-zinc-500">{label}</label>
       <input
         type={type}
         value={value}
         placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-md border border-zinc-700 bg-zinc-900 px-2 py-1.5 text-sm outline-none focus:border-emerald-400"
+        className="w-full rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm outline-none focus:border-emerald-500"
       />
     </div>
   );

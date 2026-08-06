@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   getExerciseGuide,
   videoSearchUrl,
@@ -18,6 +19,10 @@ export default function ExerciseGuideModal({
   onClose: () => void;
 }) {
   const guide = getExerciseGuide(exerciseName);
+  // Portal to <body>: opened from inside cards whose reduced opacity would
+  // otherwise trap and fade the fixed overlay.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -31,7 +36,9 @@ export default function ExerciseGuideModal({
     };
   }, [onClose]);
 
-  return (
+  if (!mounted) return null;
+
+  return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 p-0 sm:items-center sm:p-6"
       onClick={onClose}
@@ -40,14 +47,14 @@ export default function ExerciseGuideModal({
       aria-label={`How to perform ${exerciseName}`}
     >
       <div
-        className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-t-2xl border border-zinc-700 bg-zinc-900 sm:rounded-2xl"
+        className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-t-2xl border border-zinc-300 bg-white sm:rounded-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="sticky top-0 flex items-center justify-between border-b border-zinc-800 bg-zinc-900 px-5 py-3">
+        <div className="sticky top-0 flex items-center justify-between border-b border-zinc-200 bg-white px-5 py-3">
           <h2 className="font-semibold">{exerciseName}</h2>
           <button
             onClick={onClose}
-            className="rounded-md px-2 py-1 text-zinc-400 hover:bg-zinc-800 hover:text-white"
+            className="rounded-md px-2 py-1 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900"
             aria-label="Close"
           >
             ✕
@@ -61,7 +68,7 @@ export default function ExerciseGuideModal({
                 <div className="flex flex-wrap items-center justify-center gap-4">
                   {getRigForExercise(exerciseName) && (
                     <figure className="text-center">
-                      <div className="rounded-lg border border-zinc-800 bg-zinc-950/60">
+                      <div className="rounded-lg border border-zinc-200 bg-zinc-100/80">
                         <ExerciseAnimation exerciseName={exerciseName} />
                       </div>
                       <figcaption className="mt-1 text-xs text-zinc-500">
@@ -78,7 +85,7 @@ export default function ExerciseGuideModal({
                   {guide.primary.map((m) => (
                     <span
                       key={m}
-                      className="rounded-full bg-emerald-400/20 px-2.5 py-0.5 text-xs font-medium text-emerald-300"
+                      className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-700"
                     >
                       {MUSCLE_LABELS[m]}
                     </span>
@@ -86,7 +93,7 @@ export default function ExerciseGuideModal({
                   {guide.secondary.map((m) => (
                     <span
                       key={m}
-                      className="rounded-full bg-zinc-800 px-2.5 py-0.5 text-xs text-zinc-400"
+                      className="rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs text-zinc-500"
                     >
                       {MUSCLE_LABELS[m]}
                     </span>
@@ -95,13 +102,13 @@ export default function ExerciseGuideModal({
               </div>
 
               <section>
-                <h3 className="mb-2 text-sm font-semibold text-zinc-200">
+                <h3 className="mb-2 text-sm font-semibold text-zinc-800">
                   How to perform it
                 </h3>
                 <ol className="space-y-1.5">
                   {guide.steps.map((step, i) => (
-                    <li key={i} className="flex gap-2.5 text-sm text-zinc-300">
-                      <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-zinc-800 text-xs font-semibold text-emerald-300">
+                    <li key={i} className="flex gap-2.5 text-sm text-zinc-700">
+                      <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-zinc-100 text-xs font-semibold text-emerald-700">
                         {i + 1}
                       </span>
                       {step}
@@ -111,13 +118,13 @@ export default function ExerciseGuideModal({
               </section>
 
               <section>
-                <h3 className="mb-2 text-sm font-semibold text-zinc-200">
+                <h3 className="mb-2 text-sm font-semibold text-zinc-800">
                   Form cues
                 </h3>
-                <ul className="space-y-1 text-sm text-zinc-300">
+                <ul className="space-y-1 text-sm text-zinc-700">
                   {guide.cues.map((cue, i) => (
                     <li key={i} className="flex gap-2">
-                      <span className="text-emerald-300">✓</span>
+                      <span className="text-emerald-700">✓</span>
                       {cue}
                     </li>
                   ))}
@@ -125,13 +132,13 @@ export default function ExerciseGuideModal({
               </section>
 
               <section>
-                <h3 className="mb-2 text-sm font-semibold text-zinc-200">
+                <h3 className="mb-2 text-sm font-semibold text-zinc-800">
                   Common mistakes
                 </h3>
-                <ul className="space-y-1 text-sm text-zinc-300">
+                <ul className="space-y-1 text-sm text-zinc-700">
                   {guide.mistakes.map((mistake, i) => (
                     <li key={i} className="flex gap-2">
-                      <span className="text-red-400">✕</span>
+                      <span className="text-red-600">✕</span>
                       {mistake}
                     </li>
                   ))}
@@ -139,7 +146,7 @@ export default function ExerciseGuideModal({
               </section>
             </>
           ) : (
-            <p className="text-sm text-zinc-400">
+            <p className="text-sm text-zinc-500">
               No built-in guide for this custom exercise yet — the video search
               below is the fastest way to see it performed, and the AI trainer
               can talk you through form during a workout.
@@ -150,12 +157,13 @@ export default function ExerciseGuideModal({
             href={videoSearchUrl(exerciseName)}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 rounded-md border border-zinc-700 px-4 py-2.5 text-sm font-medium text-zinc-200 transition hover:border-emerald-400/60 hover:text-white"
+            className="flex items-center justify-center gap-2 rounded-md border border-zinc-300 px-4 py-2.5 text-sm font-medium text-zinc-800 transition hover:border-emerald-500/60 hover:text-zinc-900"
           >
             <span aria-hidden>▶</span> Watch video demonstrations
           </a>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

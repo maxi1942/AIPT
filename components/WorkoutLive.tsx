@@ -29,6 +29,7 @@ export default function WorkoutLive({ sessionId }: { sessionId: number }) {
   const [finishing, setFinishing] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [coachEvent, setCoachEvent] = useState<CoachEvent | null>(null);
+  const [expandOverride, setExpandOverride] = useState<Record<string, boolean>>({});
 
   const load = useCallback(async () => {
     const res = await fetch(`/api/sessions/${sessionId}`);
@@ -163,7 +164,7 @@ export default function WorkoutLive({ sessionId }: { sessionId: number }) {
 
   if (loadError) {
     return (
-      <div className="rounded-md border border-red-500/40 bg-red-500/10 px-4 py-3 text-red-300">
+      <div className="rounded-md border border-red-300 bg-red-50 px-4 py-3 text-red-700">
         {loadError}
       </div>
     );
@@ -199,7 +200,7 @@ export default function WorkoutLive({ sessionId }: { sessionId: number }) {
           <button
             onClick={finishWorkout}
             disabled={finishing || finished}
-            className="rounded-md bg-emerald-400 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-300 disabled:opacity-50"
+            className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-500 disabled:opacity-50"
           >
             {finished
               ? "Workout finished"
@@ -209,33 +210,62 @@ export default function WorkoutLive({ sessionId }: { sessionId: number }) {
           </button>
         </div>
 
-        {cards.map((card, i) => (
-          <ExerciseCard
-            key={card.planned?.id ?? `orphan-${card.exerciseId}`}
-            name={card.name}
-            planned={card.planned}
-            isFirst={i === 0}
-            isLast={i === cards.length - 1}
-            sets={setsByExercise.get(card.exerciseId) ?? []}
-            onLog={(reps, weight, rpe) =>
-              logSet(card.exerciseId, reps, weight, rpe)
-            }
-            onDeleteSet={deleteSet}
-            onSwap={card.planned ? () => setSwapTarget(card.planned!) : undefined}
-            onMove={
-              card.planned
-                ? (dir) => moveExercise(card.planned!.id, dir)
-                : undefined
-            }
-            onRemove={
-              card.planned ? () => removeExercise(card.planned!) : undefined
-            }
-            readOnly={finished}
-          />
-        ))}
+        {(() => {
+          const doneFlags = cards.map(
+            (card) =>
+              !!card.planned &&
+              (setsByExercise.get(card.exerciseId)?.length ?? 0) >=
+                card.planned.target_sets
+          );
+          const currentIndex = doneFlags.findIndex((d) => !d);
+          return cards.map((card, i) => {
+            const key = card.planned
+              ? String(card.planned.id)
+              : `orphan-${card.exerciseId}`;
+            const status: CardStatus = doneFlags[i]
+              ? "done"
+              : i === currentIndex
+                ? "active"
+                : "upcoming";
+            const expanded = finished
+              ? true
+              : (expandOverride[key] ?? status === "active");
+            return (
+              <ExerciseCard
+                key={key}
+                name={card.name}
+                planned={card.planned}
+                isFirst={i === 0}
+                isLast={i === cards.length - 1}
+                status={status}
+                expanded={expanded}
+                onToggle={() =>
+                  setExpandOverride((prev) => ({ ...prev, [key]: !expanded }))
+                }
+                sets={setsByExercise.get(card.exerciseId) ?? []}
+                onLog={(reps, weight, rpe) =>
+                  logSet(card.exerciseId, reps, weight, rpe)
+                }
+                onDeleteSet={deleteSet}
+                onSwap={
+                  card.planned ? () => setSwapTarget(card.planned!) : undefined
+                }
+                onMove={
+                  card.planned
+                    ? (dir) => moveExercise(card.planned!.id, dir)
+                    : undefined
+                }
+                onRemove={
+                  card.planned ? () => removeExercise(card.planned!) : undefined
+                }
+                readOnly={finished}
+              />
+            );
+          });
+        })()}
 
         {!finished && (
-          <div className="rounded-lg border border-dashed border-zinc-700 p-4">
+          <div className="rounded-lg border border-dashed border-zinc-300 p-4">
             {showAdd ? (
               <ExercisePicker
                 library={library}
@@ -247,7 +277,7 @@ export default function WorkoutLive({ sessionId }: { sessionId: number }) {
             ) : (
               <button
                 onClick={() => setShowAdd(true)}
-                className="w-full text-sm text-emerald-300 hover:text-emerald-200"
+                className="w-full text-sm text-emerald-700 hover:text-emerald-600"
               >
                 + Add another exercise
               </button>
@@ -262,7 +292,7 @@ export default function WorkoutLive({ sessionId }: { sessionId: number }) {
           onClick={() => setSwapTarget(null)}
         >
           <div
-            className="w-full max-w-lg rounded-t-2xl border border-zinc-700 bg-zinc-900 p-5 sm:rounded-2xl"
+            className="w-full max-w-lg rounded-t-2xl border border-zinc-300 bg-white p-5 sm:rounded-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <h2 className="mb-3 font-semibold">
@@ -321,12 +351,12 @@ function ExercisePicker({
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
           placeholder={placeholder}
-          className="grow rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm outline-none focus:border-emerald-400"
+          className="grow rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-500"
         />
         <select
           value={group}
           onChange={(e) => setGroup(e.target.value)}
-          className="rounded-md border border-zinc-700 bg-zinc-950 px-2 py-2 text-sm outline-none focus:border-emerald-400"
+          className="rounded-md border border-zinc-300 bg-white px-2 py-2 text-sm outline-none focus:border-emerald-500"
         >
           {groups.map((g) => (
             <option key={g} value={g}>
@@ -339,7 +369,7 @@ function ExercisePicker({
         {candidates.slice(0, 30).map((e) => (
           <div
             key={e.id}
-            className="flex w-full items-center justify-between rounded px-3 py-2 text-sm hover:bg-zinc-800"
+            className="flex w-full items-center justify-between rounded px-3 py-2 text-sm hover:bg-zinc-100"
           >
             <button onClick={() => onPick(e)} className="grow text-left">
               {e.name}
@@ -349,7 +379,7 @@ function ExercisePicker({
             </button>
             <button
               onClick={() => setGuideFor(e.name)}
-              className="ml-2 shrink-0 rounded-full border border-zinc-700 px-2 py-0.5 text-xs text-zinc-400 hover:border-emerald-400/60 hover:text-emerald-300"
+              className="ml-2 shrink-0 rounded-full border border-zinc-300 px-2 py-0.5 text-xs text-zinc-500 hover:border-emerald-500/60 hover:text-emerald-600"
               title={`How to perform ${e.name}`}
             >
               ?
@@ -362,7 +392,7 @@ function ExercisePicker({
       </div>
       <button
         onClick={onCancel}
-        className="mt-2 text-sm text-zinc-400 hover:text-zinc-200"
+        className="mt-2 text-sm text-zinc-500 hover:text-zinc-800"
       >
         Cancel
       </button>
@@ -389,12 +419,14 @@ function ElapsedTimer({ startedAt }: { startedAt: string }) {
   const m = Math.floor((seconds % 3600) / 60);
   const s = seconds % 60;
   return (
-    <div className="text-sm tabular-nums text-zinc-400">
+    <div className="text-sm tabular-nums text-zinc-500">
       Elapsed: {h > 0 ? `${h}:` : ""}
       {String(m).padStart(2, "0")}:{String(s).padStart(2, "0")}
     </div>
   );
 }
+
+type CardStatus = "active" | "upcoming" | "done";
 
 function ExerciseCard({
   name,
@@ -402,6 +434,9 @@ function ExerciseCard({
   sets,
   isFirst,
   isLast,
+  status,
+  expanded,
+  onToggle,
   onLog,
   onDeleteSet,
   onSwap,
@@ -414,6 +449,9 @@ function ExerciseCard({
   sets: SetLog[];
   isFirst: boolean;
   isLast: boolean;
+  status: CardStatus;
+  expanded: boolean;
+  onToggle: () => void;
   onLog: (reps: number, weight: number, rpe: string) => Promise<boolean>;
   onDeleteSet: (setId: number) => void;
   onSwap?: () => void;
@@ -438,25 +476,51 @@ function ExerciseCard({
     if (ok) setRpe("");
   }
 
-  const done = planned ? sets.length >= planned.target_sets : false;
+  // The current exercise pops; the rest recede until they're up.
+  const cardStyle = readOnly
+    ? "border-zinc-200 bg-white"
+    : status === "active"
+      ? "border-emerald-500/60 bg-white ring-1 ring-emerald-500/25 shadow-sm"
+      : status === "done"
+        ? "border-zinc-200 bg-zinc-50 opacity-70"
+        : "border-zinc-200 bg-white opacity-75";
 
   return (
-    <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-4">
-      <div className="flex items-start justify-between gap-2">
+    <div className={`rounded-lg border p-4 transition ${cardStyle}`}>
+      <div
+        className="flex cursor-pointer items-start justify-between gap-2"
+        onClick={onToggle}
+        role="button"
+        aria-expanded={expanded}
+      >
         <div>
           <div className="flex flex-wrap items-center gap-2 font-semibold">
-            {name}
+            <span className={status === "done" && !readOnly ? "text-zinc-500" : ""}>
+              {name}
+            </span>
+            {!readOnly && status === "active" && (
+              <span className="rounded-full bg-emerald-600 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-white">
+                Now
+              </span>
+            )}
+            {!readOnly && status === "done" && (
+              <span className="rounded-full bg-zinc-200/80 px-2 py-0.5 text-[11px] font-medium text-zinc-500">
+                ✓ Done
+              </span>
+            )}
             <button
-              onClick={() => setShowGuide(true)}
-              className="rounded-full border border-zinc-700 px-2 py-0.5 text-xs font-medium text-zinc-400 transition hover:border-emerald-400/60 hover:text-emerald-300"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowGuide(true);
+              }}
+              className="rounded-full border border-zinc-300 px-2 py-0.5 text-xs font-medium text-zinc-500 transition hover:border-emerald-500/60 hover:text-emerald-600"
               title={`How to perform ${name}`}
             >
               How to
             </button>
-            {done && <span className="text-sm text-emerald-300">✓</span>}
           </div>
           {planned && (
-            <div className="text-xs text-zinc-400">
+            <div className="text-xs text-zinc-500">
               Target: {planned.target_sets} × {planned.target_reps}
               {planned.target_weight != null
                 ? ` @ ${planned.target_weight} kg`
@@ -467,60 +531,75 @@ function ExerciseCard({
           )}
         </div>
         <div className="flex items-center gap-1">
-          <span className="mr-1 text-sm text-zinc-400">
+          <span className="mr-1 text-sm tabular-nums text-zinc-500">
             {sets.length}
             {planned ? `/${planned.target_sets}` : ""} sets
           </span>
-          {!readOnly && onMove && (
+          {!readOnly && onMove && expanded && (
             <>
               <button
-                onClick={() => onMove(-1)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onMove(-1);
+                }}
                 disabled={isFirst}
-                className="rounded px-1.5 py-0.5 text-zinc-500 hover:bg-zinc-800 hover:text-zinc-200 disabled:opacity-30"
+                className="rounded px-1.5 py-0.5 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-800 disabled:opacity-30"
                 aria-label="Move up"
               >
                 ↑
               </button>
               <button
-                onClick={() => onMove(1)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onMove(1);
+                }}
                 disabled={isLast}
-                className="rounded px-1.5 py-0.5 text-zinc-500 hover:bg-zinc-800 hover:text-zinc-200 disabled:opacity-30"
+                className="rounded px-1.5 py-0.5 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-800 disabled:opacity-30"
                 aria-label="Move down"
               >
                 ↓
               </button>
             </>
           )}
-          {!readOnly && onSwap && (
+          {!readOnly && onSwap && expanded && (
             <button
-              onClick={onSwap}
-              className="rounded border border-zinc-700 px-2 py-0.5 text-xs text-zinc-400 hover:border-emerald-400/60 hover:text-emerald-300"
+              onClick={(e) => {
+                e.stopPropagation();
+                onSwap();
+              }}
+              className="rounded border border-zinc-300 px-2 py-0.5 text-xs text-zinc-500 hover:border-emerald-500/60 hover:text-emerald-600"
               title="Swap for another exercise"
             >
               ⇄ Swap
             </button>
           )}
-          {!readOnly && onRemove && (
+          {!readOnly && onRemove && expanded && (
             <button
-              onClick={onRemove}
-              className="rounded px-1.5 py-0.5 text-zinc-600 hover:bg-red-500/10 hover:text-red-400"
+              onClick={(e) => {
+                e.stopPropagation();
+                onRemove();
+              }}
+              className="rounded px-1.5 py-0.5 text-zinc-400 hover:bg-red-50 hover:text-red-600"
               aria-label="Remove exercise"
               title="Remove from this session"
             >
               ✕
             </button>
           )}
+          <span className="ml-1 text-zinc-400" aria-hidden>
+            {expanded ? "▾" : "▸"}
+          </span>
         </div>
       </div>
 
-      {sets.length > 0 && (
+      {expanded && sets.length > 0 && (
         <div className="mt-3 space-y-1">
           {sets.map((s) => (
             <div
               key={s.id}
-              className="group flex items-center justify-between rounded bg-zinc-950/60 px-3 py-1.5 text-sm tabular-nums"
+              className="group flex items-center justify-between rounded bg-zinc-100/80 px-3 py-1.5 text-sm tabular-nums"
             >
-              <span className="text-zinc-400">Set {s.set_number}</span>
+              <span className="text-zinc-500">Set {s.set_number}</span>
               <span>
                 {s.reps} reps × {s.weight} kg
                 {s.rpe != null && (
@@ -532,7 +611,7 @@ function ExerciseCard({
               {!readOnly && (
                 <button
                   onClick={() => onDeleteSet(s.id)}
-                  className="text-zinc-600 opacity-0 transition group-hover:opacity-100 hover:text-red-400"
+                  className="text-zinc-400 opacity-0 transition group-hover:opacity-100 hover:text-red-600"
                   aria-label="Delete set"
                 >
                   ✕
@@ -543,21 +622,21 @@ function ExerciseCard({
         </div>
       )}
 
-      {!readOnly && (
+      {expanded && !readOnly && (
         <div className="mt-3 flex flex-wrap items-end gap-2">
           <div>
-            <label className="mb-1 block text-xs text-zinc-400">Reps</label>
+            <label className="mb-1 block text-xs text-zinc-500">Reps</label>
             <input
               type="number"
               inputMode="numeric"
               value={reps}
               onChange={(e) => setReps(e.target.value)}
               placeholder={lastSet ? String(lastSet.reps) : "8"}
-              className="w-20 rounded-md border border-zinc-700 bg-zinc-950 px-2 py-1.5 text-sm outline-none focus:border-emerald-400"
+              className="w-20 rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm outline-none focus:border-emerald-500"
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs text-zinc-400">
+            <label className="mb-1 block text-xs text-zinc-500">
               Weight (kg)
             </label>
             <input
@@ -566,12 +645,12 @@ function ExerciseCard({
               value={weight}
               onChange={(e) => setWeight(e.target.value)}
               placeholder={lastSet ? String(lastSet.weight) : "0"}
-              className="w-24 rounded-md border border-zinc-700 bg-zinc-950 px-2 py-1.5 text-sm outline-none focus:border-emerald-400"
+              className="w-24 rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm outline-none focus:border-emerald-500"
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs text-zinc-400">
-              RPE <span className="text-zinc-600">(opt.)</span>
+            <label className="mb-1 block text-xs text-zinc-500">
+              RPE <span className="text-zinc-400">(opt.)</span>
             </label>
             <input
               type="number"
@@ -581,13 +660,13 @@ function ExerciseCard({
               value={rpe}
               onChange={(e) => setRpe(e.target.value)}
               placeholder="—"
-              className="w-16 rounded-md border border-zinc-700 bg-zinc-950 px-2 py-1.5 text-sm outline-none focus:border-emerald-400"
+              className="w-16 rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm outline-none focus:border-emerald-500"
             />
           </div>
           <button
             onClick={submit}
             disabled={busy || !reps}
-            className="rounded-md bg-zinc-100 px-4 py-1.5 text-sm font-semibold text-zinc-950 hover:bg-white disabled:opacity-40"
+            className="rounded-md bg-zinc-900 px-4 py-1.5 text-sm font-semibold text-white hover:bg-zinc-700 disabled:opacity-40"
           >
             {busy ? "…" : "Log set"}
           </button>
@@ -717,11 +796,11 @@ function TrainerChat({
   }
 
   return (
-    <div className="flex h-[46vh] min-h-[340px] flex-col rounded-lg border border-zinc-800 bg-zinc-900 lg:sticky lg:top-20 lg:h-[calc(100vh-8rem)]">
-      <div className="border-b border-zinc-800 px-4 py-3">
+    <div className="flex h-[46vh] min-h-[340px] flex-col rounded-lg border border-zinc-200 bg-white lg:sticky lg:top-6 lg:h-[calc(100vh-8rem)]">
+      <div className="border-b border-zinc-200 px-4 py-3">
         <div className="flex items-center gap-2">
           <span
-            className={`flex h-2 w-2 rounded-full ${streaming ? "animate-pulse bg-emerald-300" : "bg-emerald-400"}`}
+            className={`flex h-2 w-2 rounded-full ${streaming ? "animate-pulse bg-emerald-500" : "bg-emerald-600"}`}
           />
           <h2 className="text-sm font-semibold">AI Trainer</h2>
         </div>
@@ -732,7 +811,7 @@ function TrainerChat({
 
       <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto p-4">
         {messages.length === 0 && !streaming && (
-          <p className="text-sm text-zinc-400">
+          <p className="text-sm text-zinc-500">
             Your trainer is warming up — ask anything, or just log your first
             set.
           </p>
@@ -742,8 +821,8 @@ function TrainerChat({
             key={i}
             className={
               m.role === "user"
-                ? "ml-6 rounded-lg bg-emerald-400/15 px-3 py-2 text-sm"
-                : "mr-2 rounded-lg bg-zinc-800 px-3 py-2 text-sm"
+                ? "ml-6 rounded-lg bg-emerald-100/80 px-3 py-2 text-sm"
+                : "mr-2 rounded-lg bg-zinc-100 px-3 py-2 text-sm"
             }
           >
             <div className="whitespace-pre-wrap">
@@ -758,7 +837,7 @@ function TrainerChat({
         ))}
       </div>
 
-      <div className="border-t border-zinc-800 p-3">
+      <div className="border-t border-zinc-200 p-3">
         {!finished && (
           <div className="mb-2 flex flex-wrap gap-1.5">
             {QUICK_REPLIES.map((q) => (
@@ -766,7 +845,7 @@ function TrainerChat({
                 key={q}
                 onClick={() => send(q)}
                 disabled={streaming}
-                className="rounded-full border border-zinc-700 px-2.5 py-1 text-xs text-zinc-300 transition hover:border-emerald-400/60 hover:text-white disabled:opacity-40"
+                className="rounded-full border border-zinc-300 px-2.5 py-1 text-xs text-zinc-700 transition hover:border-emerald-500/60 hover:text-zinc-900 disabled:opacity-40"
               >
                 {q}
               </button>
@@ -785,12 +864,12 @@ function TrainerChat({
             onChange={(e) => setInput(e.target.value)}
             placeholder="Ask your trainer…"
             disabled={streaming}
-            className="grow rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm outline-none focus:border-emerald-400 disabled:opacity-50"
+            className="grow rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-500 disabled:opacity-50"
           />
           <button
             type="submit"
             disabled={streaming || !input.trim()}
-            className="rounded-md bg-emerald-400 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-300 disabled:opacity-40"
+            className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-500 disabled:opacity-40"
           >
             Send
           </button>
