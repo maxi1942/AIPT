@@ -17,6 +17,17 @@ export interface StaticShape {
 
 export type WeightType = "plate" | "bigplate" | "dumbbell" | "wheel" | "handle";
 
+/**
+ * Where the working-muscle glow sits on the moving body: a point at fraction
+ * `t` along the segment from joint `a` to joint `b`, glow radius `r`.
+ */
+export interface GlowSpec {
+  a: string;
+  b: string;
+  t: number;
+  r: number;
+}
+
 export interface Rig {
   /** Pairs of joint names to connect with limb strokes. */
   links: Array<[string, string]>;
@@ -26,6 +37,8 @@ export interface Rig {
   weights?: string[];
   /** What kind of equipment to draw at the weight joints. */
   weightType?: WeightType;
+  /** Working-muscle glow positions (pulse with the movement). */
+  glows?: GlowSpec[];
   /** Non-moving scenery: floor, bench, bar to hang from. */
   staticShapes?: StaticShape[];
   /** Keyframes; the loop runs A → B → A with easing. */
@@ -67,7 +80,11 @@ export const RIGS: Record<string, Rig> = {
     ],
     head: "head",
     weights: ["shoulder"],
-    staticShapes: [FLOOR],
+    staticShapes: [
+      FLOOR,
+      { type: "line", coords: [70, 16, 70, 91] },
+      { type: "line", coords: [66, 31, 70, 31] },
+    ],
     poses: [
       {
         ankle: [50, 90], toe: [58, 90], knee: [50, 72], hip: [50, 54],
@@ -141,7 +158,12 @@ export const RIGS: Record<string, Rig> = {
     ],
     head: "head",
     weights: ["hand"],
-    staticShapes: [FLOOR, { type: "rect", coords: [38, 72, 42, 5] }],
+    staticShapes: [
+      FLOOR,
+      { type: "rect", coords: [38, 72, 42, 5] },
+      { type: "line", coords: [84, 28, 84, 91] },
+      { type: "line", coords: [81, 42, 84, 42] },
+    ],
     poses: [
       {
         ankle: [28, 90], knee: [33, 74], hip: [48, 70], shoulder: [64, 69],
@@ -612,8 +634,49 @@ const EXERCISE_RIG: Record<string, keyof typeof RIGS> = {
   "farmer's carry": "carry",
 };
 
+/** Working-muscle glow placement per rig. */
+const RIG_GLOWS: Record<string, GlowSpec[]> = {
+  squat: [{ a: "hip", b: "knee", t: 0.45, r: 5.5 }],
+  hinge: [
+    { a: "hip", b: "knee", t: 0.35, r: 5 },
+    { a: "hip", b: "shoulder", t: 0.2, r: 4 },
+  ],
+  lunge: [{ a: "hip", b: "kneeF", t: 0.5, r: 5 }],
+  bench: [{ a: "shoulder", b: "hip", t: 0.2, r: 5.5 }],
+  pushup: [{ a: "shoulder", b: "hip", t: 0.15, r: 5 }],
+  dip: [
+    { a: "shoulder", b: "hip", t: 0.25, r: 4.5 },
+    { a: "shoulder", b: "elbow", t: 0.6, r: 3.5 },
+  ],
+  ohp: [{ a: "shoulder", b: "elbow", t: 0.15, r: 4.5 }],
+  pullup: [{ a: "shoulder", b: "hip", t: 0.3, r: 5 }],
+  row: [{ a: "shoulder", b: "hip", t: 0.25, r: 5 }],
+  curl: [{ a: "shoulder", b: "elbow", t: 0.5, r: 3.8 }],
+  triceps: [{ a: "shoulder", b: "elbow", t: 0.55, r: 3.8 }],
+  lateral: [
+    { a: "shoulder", b: "elbowL", t: 0.3, r: 4 },
+    { a: "shoulder", b: "elbowR", t: 0.3, r: 4 },
+  ],
+  legext: [{ a: "hip", b: "knee", t: 0.55, r: 4.5 }],
+  legcurl: [{ a: "hip", b: "knee", t: 0.5, r: 4.5 }],
+  hipthrust: [{ a: "hip", b: "hip", t: 0, r: 5 }],
+  calfraise: [{ a: "knee", b: "ankle", t: 0.45, r: 3.2 }],
+  plank: [{ a: "hip", b: "shoulder", t: 0.45, r: 4.5 }],
+  legraise: [{ a: "hip", b: "shoulder", t: 0.25, r: 4.5 }],
+  crunch: [{ a: "hip", b: "shoulder", t: 0.5, r: 4 }],
+  rollout: [{ a: "hip", b: "shoulder", t: 0.45, r: 4.5 }],
+  carry: [
+    { a: "shoulder", b: "shoulder", t: 0, r: 4 },
+    { a: "elbow", b: "hand", t: 0.6, r: 3 },
+  ],
+};
+
 export function getRigForExercise(name: string): Rig | null {
   const rigId = EXERCISE_RIG[name.trim().toLowerCase()];
   if (!rigId) return null;
-  return { ...RIGS[rigId], weightType: RIG_WEIGHT_TYPE[rigId] };
+  return {
+    ...RIGS[rigId],
+    weightType: RIG_WEIGHT_TYPE[rigId],
+    glows: RIG_GLOWS[rigId],
+  };
 }

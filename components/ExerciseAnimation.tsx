@@ -76,8 +76,12 @@ export default function ExerciseAnimation({
 }
 
 function RigPlayer({ rig }: { rig: Rig }) {
-  const [pose, setPose] = useState<Pose>(rig.poses[0]);
+  const [frame, setFrame] = useState<{ pose: Pose; f: number }>({
+    pose: rig.poses[0],
+    f: 0,
+  });
   const frameRef = useRef<number>(0);
+  const pose = frame.pose;
 
   useEffect(() => {
     const reduceMotion = window.matchMedia(
@@ -85,7 +89,7 @@ function RigPlayer({ rig }: { rig: Rig }) {
     ).matches;
     if (reduceMotion) {
       // Show the mid-point of the movement as a still frame.
-      setPose(lerpPose(rig.poses[0], rig.poses[1], 0.5));
+      setFrame({ pose: lerpPose(rig.poses[0], rig.poses[1], 0.5), f: 0.5 });
       return;
     }
 
@@ -93,7 +97,8 @@ function RigPlayer({ rig }: { rig: Rig }) {
     const start = performance.now();
     const tick = (now: number) => {
       const phase = ((now - start) % durMs) / durMs;
-      setPose(lerpPose(rig.poses[0], rig.poses[1], easeInOutWithHold(phase)));
+      const f = easeInOutWithHold(phase);
+      setFrame({ pose: lerpPose(rig.poses[0], rig.poses[1], f), f });
       frameRef.current = requestAnimationFrame(tick);
     };
     frameRef.current = requestAnimationFrame(tick);
@@ -149,6 +154,21 @@ function RigPlayer({ rig }: { rig: Rig }) {
   const shoulder =
     pose["shoulder"] ?? pose["shoulderL"] ?? pose["shoulderR"] ?? null;
 
+  // Ground shadow under the figure, only for rigs standing on the floor line.
+  const hasFloor = rig.staticShapes?.some(
+    (s) => s.type === "line" && s.coords[1] === 91 && s.coords[3] === 91
+  );
+  const xs = Object.values(pose).map((p) => p[0]);
+  const shadowCx = (Math.min(...xs) + Math.max(...xs)) / 2;
+  const shadowRx = Math.max(9, (Math.max(...xs) - Math.min(...xs)) * 0.55);
+
+  // Trajectory of the load between the two keyframes (the "bar path" line).
+  const pathJoint = rig.weights?.[0];
+  const pathA = pathJoint ? rig.poses[0][pathJoint] : null;
+  const pathB = pathJoint ? rig.poses[1][pathJoint] : null;
+  const showBarPath =
+    pathA && pathB && Math.hypot(pathB[0] - pathA[0], pathB[1] - pathA[1]) > 8;
+
   return (
     <svg viewBox="0 0 100 100" width="150" height="150" aria-hidden>
       <defs>
@@ -164,7 +184,23 @@ function RigPlayer({ rig }: { rig: Rig }) {
           <stop offset="0%" stopColor="#5d5d66" />
           <stop offset="100%" stopColor="#44444c" />
         </linearGradient>
+        <radialGradient id="figGlow">
+          <stop offset="0%" stopColor={ACCENT} stopOpacity="0.85" />
+          <stop offset="55%" stopColor={ACCENT} stopOpacity="0.35" />
+          <stop offset="100%" stopColor={ACCENT} stopOpacity="0" />
+        </radialGradient>
       </defs>
+
+      {hasFloor && (
+        <ellipse
+          cx={shadowCx}
+          cy={91.6}
+          rx={shadowRx}
+          ry={1.9}
+          fill="#000"
+          opacity={0.4}
+        />
+      )}
 
       {rig.staticShapes?.map((shape, i) =>
         shape.type === "line" ? (
@@ -219,6 +255,40 @@ function RigPlayer({ rig }: { rig: Rig }) {
       {/* near-side limbs */}
       {legLinks.map(([f, t, s]) => limb(f, t, s, "url(#figNear)"))}
       {armLinks.map(([f, t, s]) => limb(f, t, s, "url(#figNear)"))}
+
+      {/* working-muscle glow, pulsing with exertion */}
+      {rig.glows?.map((glow, i) => {
+        const a = pose[glow.a];
+        const b = pose[glow.b];
+        if (!a || !b) return null;
+        const gx = a[0] + (b[0] - a[0]) * glow.t;
+        const gy = a[1] + (b[1] - a[1]) * glow.t;
+        return (
+          <circle
+            key={i}
+            cx={gx}
+            cy={gy}
+            r={glow.r * (1 + 0.18 * frame.f)}
+            fill="url(#figGlow)"
+            opacity={0.45 + 0.5 * frame.f}
+          />
+        );
+      })}
+
+      {/* bar path of the load between the two keyframes */}
+      {showBarPath && pathA && pathB && (
+        <line
+          x1={pathA[0]}
+          y1={pathA[1]}
+          x2={pathB[0]}
+          y2={pathB[1]}
+          stroke={ACCENT}
+          strokeWidth={0.9}
+          strokeDasharray="2.2 2.2"
+          strokeLinecap="round"
+          opacity={0.4}
+        />
+      )}
 
       {/* equipment */}
       {rig.weights?.map((joint) =>
