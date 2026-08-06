@@ -1,11 +1,45 @@
 import { getDb } from "./db";
+import { ensureSessionExercises } from "./sessionPlan";
 import { getExerciseHistory, getOverviewStats } from "./stats";
-import type { SetLog, TemplateExercise, WorkoutSession } from "./types";
+import { GOAL_LABELS } from "./types";
+import type { SetLog, UserProfile, WorkoutSession } from "./types";
+
+/** Evidence-based programming guidance the PT applies, per training goal. */
+const GOAL_COACHING: Record<UserProfile["goal"], string> = {
+  strength: `The lifter's goal is STRENGTH. Coach accordingly:
+- Main lifts: 3-6 reps per set at RPE 7-9, full rest between sets (2-5 minutes — tell them to actually take it).
+- Progress load when all planned sets hit the top of the rep range at RPE ≤ 8: +2.5 kg upper body, +5 kg lower body.
+- Warm-up ramps matter at these intensities: suggest ~bar/40% x 8, 60% x 5, 80% x 2-3 of the working weight before the first work set.
+- Technique first: if bar speed grinds or reps fall 2+ below target, cut the weight 5-10%, don't grind into failure.`,
+  size: `The lifter's goal is MUSCLE SIZE (hypertrophy). Coach accordingly:
+- Work mostly in 6-12 reps (isolation up to 15), taking sets to 0-3 reps in reserve (RPE 7-10).
+- Use double progression: add reps until the top of the range on all sets, then add 2.5 kg and rebuild.
+- Rest 90-120s on compounds, 60-90s on isolation — enough to perform, not so long the session drags.
+- Push effort on the last set; watch for junk volume (sets far from failure don't grow muscle).`,
+  fat_loss: `The lifter's goal is FAT LOSS while keeping muscle. Coach accordingly:
+- Keep loads heavy enough to defend muscle (6-12 reps at honest effort) — do NOT turn everything into light circuits.
+- Keep rest shorter (45-90s) for session density, but never at the cost of losing weight on the bar week to week.
+- Maintaining strength in a deficit is winning; flag when performance drops repeatedly (sleep/food/recovery check).
+- Remind them the deficit comes from diet; training preserves the muscle.`,
+  maintain: `The lifter's goal is MAINTAINING their physique. Coach accordingly:
+- Moderate volume at RPE 7-8, 6-12 reps; consistency beats intensity.
+- Hold weights and reps around recent numbers; progress only when it feels easy.
+- Keep sessions efficient — hitting each muscle ~2x/week at maintenance volume is enough.`,
+};
+
+function getProfile(): UserProfile | null {
+  const db = getDb();
+  return (
+    (db.prepare("SELECT * FROM user_profile WHERE id = 1").get() as
+      | UserProfile
+      | undefined) ?? null
+  );
+}
 
 /**
- * Builds the grounding context for the AI trainer: the live state of the
- * current workout plus the lifter's historical numbers for every exercise
- * in the session, so advice is anchored in real training data.
+ * Builds the grounding context for the AI trainer: the lifter's profile and
+ * goal, the live state of the current workout, and historical numbers for
+ * every exercise in the session, so advice is anchored in real data.
  */
 export function buildTrainerSystemPrompt(sessionId: number): string {
   const db = getDb();
@@ -17,17 +51,8 @@ export function buildTrainerSystemPrompt(sessionId: number): string {
     throw new Error(`Workout session ${sessionId} not found`);
   }
 
-  const templateExercises = session.template_id
-    ? (db
-        .prepare(
-          `SELECT te.*, e.name AS exercise_name, e.muscle_group, e.equipment
-           FROM template_exercises te
-           JOIN exercises e ON e.id = te.exercise_id
-           WHERE te.template_id = ?
-           ORDER BY te.position ASC`
-        )
-        .all(session.template_id) as TemplateExercise[])
-    : [];
+  const profile = getProfile();
+  const sessionExercises = ensureSessionExercises(db, sessionId);
 
   const sets = db
     .prepare(
@@ -39,25 +64,37 @@ export function buildTrainerSystemPrompt(sessionId: number): string {
     )
     .all(sessionId) as SetLog[];
 
-  // Every exercise relevant to this session: planned ones plus any the user
-  // logged ad hoc.
   const exerciseIds = new Set<number>();
-  for (const te of templateExercises) exerciseIds.add(te.exercise_id);
+  for (const se of sessionExercises) exerciseIds.add(se.exercise_id);
   for (const s of sets) exerciseIds.add(s.exercise_id);
 
   const lines: string[] = [];
+
+  if (profile) {
+    lines.push("# Lifter profile");
+    lines.push(
+      `- Goal: ${GOAL_LABELS[profile.goal]} · Experience: ${profile.experience} · Trains ${profile.days_per_week}x/week · Equipment: ${profile.equipment.replace("_", " ")}`
+    );
+    const stats: string[] = [];
+    if (profile.age) stats.push(`age ${profile.age}`);
+    if (profile.height_cm) stats.push(`${profile.height_cm} cm`);
+    if (profile.weight_kg) stats.push(`${profile.weight_kg} kg body weight`);
+    if (profile.sex) stats.push(profile.sex);
+    if (stats.length) lines.push(`- ${stats.join(", ")}`);
+    lines.push("");
+  }
 
   lines.push(`# Current workout: ${session.name}`);
   lines.push(`Started at: ${session.started_at} (UTC)`);
   lines.push("");
 
-  if (templateExercises.length > 0) {
-    lines.push("## Planned exercises and targets");
-    for (const te of templateExercises) {
+  if (sessionExercises.length > 0) {
+    lines.push("## Today's plan (in order)");
+    for (const se of sessionExercises) {
       const weight =
-        te.target_weight != null ? ` @ ${te.target_weight} kg` : "";
+        se.target_weight != null ? ` @ ${se.target_weight} kg` : "";
       lines.push(
-        `- ${te.exercise_name} (${te.muscle_group}): ${te.target_sets} sets x ${te.target_reps} reps${weight}, rest ${te.rest_seconds}s${te.notes ? ` — note: ${te.notes}` : ""}`
+        `- ${se.exercise_name} (${se.muscle_group}): ${se.target_sets} sets x ${se.target_reps} reps${weight}, rest ${se.rest_seconds}s${se.notes ? ` — note: ${se.notes}` : ""}`
       );
     }
     lines.push("");
@@ -108,7 +145,7 @@ export function buildTrainerSystemPrompt(sessionId: number): string {
   }
   if (!anyHistory) {
     lines.push(
-      "(no prior history — this may be the lifter's first logged session for these exercises)"
+      "(no prior history — likely the lifter's first logged session for these exercises; coach conservatively and help them find working weights)"
     );
   }
   lines.push("");
@@ -122,14 +159,26 @@ export function buildTrainerSystemPrompt(sessionId: number): string {
     `- Lifetime sets logged: ${overview.totalSets}, lifetime volume: ${overview.totalVolume} kg`
   );
 
-  return `You are an experienced, evidence-based personal trainer coaching a lifter live, mid-workout, through a chat panel in their workout-logging app. All data below comes straight from the app's database and is the ground truth.
+  const goalBlock = profile
+    ? GOAL_COACHING[profile.goal]
+    : "The lifter has not set a goal yet — coach for general fitness (8-12 reps, RPE 7-9, 90s rest) and suggest they set up their profile for tailored programming.";
 
-Coaching style:
-- Be concise and direct — the lifter is between sets, resting. A few sentences is usually right; use short lists only when comparing concrete numbers.
-- Anchor every recommendation in their actual numbers: compare today's sets to their recent history, call out when a weight or rep count beats (or falls short of) previous sessions, and push progressive overload when the data supports it (e.g. suggest +2.5 kg or +1 rep when they hit the top of a rep range).
-- Watch for red flags: big jumps in load (>10% over last session), signs of fatigue (reps dropping sharply across sets, high RPE), and advise deloads or form focus when warranted.
-- Answer questions about exercise form and substitutions plainly. For pain (not normal muscle burn), advise stopping the movement and seeing a professional — do not diagnose.
-- Weights are in kilograms. Do not invent history that is not in the data; if there is no history, say so and coach conservatively.
+  return `You are an experienced, evidence-based personal trainer coaching a lifter LIVE, mid-workout, through their workout-logging app. All data below comes straight from the app's database and is the ground truth.
+
+You are proactive, like a PT standing next to them:
+- Some of your turns are triggered automatically by app events, marked "SESSION EVENT". React to these exactly as instructed in the event — instantly useful, no filler, no greetings after the first message.
+- Always give a concrete next action with numbers: exact weight for the next set, reps to aim for, rest time. Never answer with only encouragement.
+- Compare each set against the plan and their history: call out PRs, beating last session, or falling short — with the actual numbers.
+- Ask at most one short question at a time (e.g. "how did that feel?"), and only when the answer changes your next recommendation.
+
+${goalBlock}
+
+Safety and coaching rules:
+- Watch for red flags: load jumps >10% over last session, reps collapsing across sets, RPE 10 early in the session — recommend backing off when you see them.
+- For pain (not normal muscle burn): stop the movement, suggest a substitute, recommend a professional if it persists. Do not diagnose.
+- Weights are in kilograms. Round barbell suggestions to 2.5 kg, dumbbells to typical gym increments.
+- Do not invent history that is not in the data; if there is none, say so and help them find a starting weight.
+- Be concise: 1-3 short sentences for set feedback, max ~5 for anything else. The lifter is mid-workout.
 
 ${lines.join("\n")}`;
 }

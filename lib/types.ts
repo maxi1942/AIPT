@@ -58,9 +58,48 @@ export interface ChatMessage {
   created_at: string;
 }
 
+export interface SessionExercise {
+  id: number;
+  session_id: number;
+  exercise_id: number;
+  position: number;
+  target_sets: number;
+  target_reps: string;
+  target_weight: number | null;
+  rest_seconds: number;
+  notes: string;
+  exercise_name?: string;
+  muscle_group?: string;
+  equipment?: string;
+}
+
+export type Goal = "size" | "fat_loss" | "strength" | "maintain";
+export type Experience = "beginner" | "intermediate" | "advanced";
+export type EquipmentAccess = "full_gym" | "dumbbells" | "bodyweight";
+
+export interface UserProfile {
+  id: 1;
+  goal: Goal;
+  experience: Experience;
+  days_per_week: number;
+  equipment: EquipmentAccess;
+  age: number | null;
+  height_cm: number | null;
+  weight_kg: number | null;
+  sex: string | null;
+  updated_at: string;
+}
+
+export const GOAL_LABELS: Record<Goal, string> = {
+  size: "Build muscle size",
+  fat_loss: "Lose fat",
+  strength: "Get stronger",
+  maintain: "Maintain physique",
+};
+
 export interface SessionDetail {
   session: WorkoutSession;
-  templateExercises: TemplateExercise[];
+  sessionExercises: SessionExercise[];
   sets: SetLog[];
   chat: ChatMessage[];
 }

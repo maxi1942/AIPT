@@ -4,9 +4,10 @@ Design your standard workouts, run them live with set-by-set logging, and get re
 
 ## Features
 
+- **Profile & auto-generated plan** — pick your goal (muscle size, fat loss, strength, maintain), experience, training days, and equipment; AIPT generates a suggested weekly plan (full-body / push-pull-legs / upper-lower split, rep schemes matched to your goal) as ordinary editable workouts, and tunes the AI trainer's coaching to your goal.
 - **Workout designer** — build reusable workout templates from a seeded exercise library (or add your own exercises), with target sets, reps, weight, and rest per exercise.
-- **Live workout sessions** — start any workout and log reps, weight, and optional RPE set by set, add exercises on the fly, and finish when you're done. An elapsed timer keeps you honest.
-- **AI trainer chat** — a Claude-powered coach sits beside your live workout. It sees your plan, every set you've logged today, and your per-exercise history (volume, top sets, estimated 1RM across past sessions), so it can push progressive overload with real numbers, flag fatigue, and answer form questions. Responses stream in live and the transcript is saved with the session.
+- **Live workout sessions** — start any workout and log reps, weight, and optional RPE set by set. Adjust the session as you go: swap any exercise for another from the library, add, remove, and reorder — without touching the saved design. An elapsed timer keeps you honest.
+- **Proactive AI trainer** — a Claude-powered coach leads the session like a real PT: it greets you with what to start with and a concrete warm-up ramp, reacts instantly after every logged set ("8 × 80 kg beats last week — add 2.5 kg next set, rest 2 min"), and coaches to your profile goal with evidence-based programming rules. It sees your plan, every set logged today, and your per-exercise history. Quick-reply chips ("felt easy/hard") keep the loop tight, transcripts are saved per session.
 - **History** — every session with its sets, per-exercise best sets, and the trainer chat transcript.
 - **Stats** — weekly training volume, and per-exercise progression charts (estimated 1RM and session volume over time) with a data-table view.
 

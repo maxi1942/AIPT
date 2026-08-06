@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
+import { ensureSessionExercises } from "@/lib/sessionPlan";
 import type { WorkoutSession } from "@/lib/types";
 
 type Params = { params: Promise<{ id: string }> };
@@ -15,17 +16,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
     return NextResponse.json({ error: "Session not found" }, { status: 404 });
   }
 
-  const templateExercises = session.template_id
-    ? db
-        .prepare(
-          `SELECT te.*, e.name AS exercise_name, e.muscle_group, e.equipment
-           FROM template_exercises te
-           JOIN exercises e ON e.id = te.exercise_id
-           WHERE te.template_id = ?
-           ORDER BY te.position ASC`
-        )
-        .all(session.template_id)
-    : [];
+  const sessionExercises = ensureSessionExercises(db, session.id);
 
   const sets = db
     .prepare(
@@ -43,7 +34,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
     )
     .all(id);
 
-  return NextResponse.json({ session, templateExercises, sets, chat });
+  return NextResponse.json({ session, sessionExercises, sets, chat });
 }
 
 export async function PATCH(req: NextRequest, { params }: Params) {

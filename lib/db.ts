@@ -102,6 +102,36 @@ function migrate(db: Database.Database) {
     CREATE INDEX IF NOT EXISTS idx_set_logs_session ON set_logs(session_id);
     CREATE INDEX IF NOT EXISTS idx_set_logs_exercise ON set_logs(exercise_id);
     CREATE INDEX IF NOT EXISTS idx_chat_session ON chat_messages(session_id);
+
+    CREATE TABLE IF NOT EXISTS user_profile (
+      id INTEGER PRIMARY KEY CHECK (id = 1),
+      goal TEXT NOT NULL DEFAULT 'size'
+        CHECK (goal IN ('size', 'fat_loss', 'strength', 'maintain')),
+      experience TEXT NOT NULL DEFAULT 'beginner'
+        CHECK (experience IN ('beginner', 'intermediate', 'advanced')),
+      days_per_week INTEGER NOT NULL DEFAULT 3
+        CHECK (days_per_week BETWEEN 2 AND 6),
+      equipment TEXT NOT NULL DEFAULT 'full_gym'
+        CHECK (equipment IN ('full_gym', 'dumbbells', 'bodyweight')),
+      age INTEGER,
+      height_cm REAL,
+      weight_kg REAL,
+      sex TEXT,
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS session_exercises (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      session_id INTEGER NOT NULL REFERENCES workout_sessions(id) ON DELETE CASCADE,
+      exercise_id INTEGER NOT NULL REFERENCES exercises(id),
+      position INTEGER NOT NULL,
+      target_sets INTEGER NOT NULL DEFAULT 3,
+      target_reps TEXT NOT NULL DEFAULT '8-12',
+      target_weight REAL,
+      rest_seconds INTEGER NOT NULL DEFAULT 90,
+      notes TEXT NOT NULL DEFAULT ''
+    );
+    CREATE INDEX IF NOT EXISTS idx_session_exercises ON session_exercises(session_id);
   `);
 
   seedExercises(db);

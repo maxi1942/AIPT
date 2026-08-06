@@ -13,6 +13,7 @@ const navLinks = [
   { href: "/templates", label: "Workouts" },
   { href: "/history", label: "History" },
   { href: "/stats", label: "Stats" },
+  { href: "/profile", label: "Profile" },
 ];
 
 export default function RootLayout({

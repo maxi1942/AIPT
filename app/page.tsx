@@ -16,6 +16,10 @@ export default function DashboardPage() {
     )
     .get() as WorkoutSession | undefined;
 
+  const hasProfile = !!db
+    .prepare("SELECT id FROM user_profile WHERE id = 1")
+    .get();
+
   const templates = db
     .prepare(
       `SELECT t.*, COUNT(te.id) AS exercise_count
@@ -49,6 +53,24 @@ export default function DashboardPage() {
           forward.
         </p>
       </div>
+
+      {!hasProfile && (
+        <Link
+          href="/profile"
+          className="flex items-center justify-between rounded-lg border border-sky-400/40 bg-sky-400/10 px-4 py-3 transition hover:bg-sky-400/20"
+        >
+          <div>
+            <div className="text-sm font-semibold text-sky-300">
+              Set up your profile
+            </div>
+            <div className="text-sm text-zinc-300">
+              Pick your goal and schedule — AIPT generates your weekly plan and
+              tailors the AI trainer to you.
+            </div>
+          </div>
+          <span className="text-sm font-semibold text-sky-300">Start →</span>
+        </Link>
+      )}
 
       {activeSession && (
         <Link

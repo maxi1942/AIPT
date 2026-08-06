@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
+import { copyTemplateToSession } from "@/lib/sessionPlan";
 
 export function GET() {
   const db = getDb();
@@ -42,8 +43,15 @@ export async function POST(req: NextRequest) {
   const result = db
     .prepare("INSERT INTO workout_sessions (template_id, name) VALUES (?, ?)")
     .run(templateId, name);
+  const sessionId = Number(result.lastInsertRowid);
+
+  // Snapshot the template's exercises so mid-workout edits stay session-local.
+  if (templateId) {
+    copyTemplateToSession(db, templateId, sessionId);
+  }
+
   const session = db
     .prepare("SELECT * FROM workout_sessions WHERE id = ?")
-    .get(result.lastInsertRowid);
+    .get(sessionId);
   return NextResponse.json(session, { status: 201 });
 }
