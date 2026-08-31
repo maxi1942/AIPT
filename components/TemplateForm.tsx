@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import ExerciseGuideModal from "./ExerciseGuideModal";
+import ExercisePickerSheet from "./ExercisePickerSheet";
 import type { Exercise } from "@/lib/types";
 import { WEEKDAY_LABELS } from "@/lib/types";
 
@@ -43,6 +44,7 @@ export default function TemplateForm({
   const [customName, setCustomName] = useState("");
   const [customGroup, setCustomGroup] = useState("Other");
   const [guideFor, setGuideFor] = useState<string | null>(null);
+  const [swapIndex, setSwapIndex] = useState<number | null>(null);
 
   useEffect(() => {
     fetch("/api/exercises")
@@ -225,7 +227,26 @@ export default function TemplateForm({
               >
                 <div className="flex items-center justify-between">
                   <div className="text-sm font-medium">
-                    {i + 1}. {exercise?.name ?? "…"}
+                    <button
+                      onClick={() => setSwapIndex(i)}
+                      className="rounded text-left hover:text-blue-700"
+                      title={`Swap ${exercise?.name ?? "exercise"} for another`}
+                    >
+                      {i + 1}. {exercise?.name ?? "…"}
+                      <span className="ml-1.5 align-middle text-zinc-400" aria-hidden>
+                        <svg
+                          viewBox="0 0 24 24"
+                          className="inline h-3.5 w-3.5"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M16 3l4 4-4 4M20 7H7M8 21l-4-4 4-4M4 17h13" />
+                        </svg>
+                      </span>
+                    </button>
                     <span className="ml-2 text-xs text-zinc-500">
                       {exercise?.muscle_group}
                     </span>
@@ -433,6 +454,23 @@ export default function TemplateForm({
         <ExerciseGuideModal
           exerciseName={guideFor}
           onClose={() => setGuideFor(null)}
+        />
+      )}
+
+      {swapIndex !== null && rows[swapIndex] && (
+        <ExercisePickerSheet
+          title={`Swap ${exerciseById.get(rows[swapIndex].exercise_id)?.name ?? "exercise"}`}
+          subtitle={`${rows[swapIndex].target_sets} sets of ${rows[swapIndex].target_reps} reps stay as they are.`}
+          library={library}
+          exclude={new Set(rows.map((r) => r.exercise_id))}
+          initialGroup={
+            exerciseById.get(rows[swapIndex].exercise_id)?.muscle_group ?? ""
+          }
+          onPick={(exercise) => {
+            updateRow(swapIndex, { exercise_id: exercise.id });
+            setSwapIndex(null);
+          }}
+          onClose={() => setSwapIndex(null)}
         />
       )}
     </div>
