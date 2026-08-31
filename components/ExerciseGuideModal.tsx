@@ -85,7 +85,7 @@ export default function ExerciseGuideModal({
                   {guide.primary.map((m) => (
                     <span
                       key={m}
-                      className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-700"
+                      className="rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-700"
                     >
                       {MUSCLE_LABELS[m]}
                     </span>
@@ -108,7 +108,7 @@ export default function ExerciseGuideModal({
                 <ol className="space-y-1.5">
                   {guide.steps.map((step, i) => (
                     <li key={i} className="flex gap-2.5 text-sm text-zinc-700">
-                      <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-zinc-100 text-xs font-semibold text-emerald-700">
+                      <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-zinc-100 text-xs font-semibold text-blue-700">
                         {i + 1}
                       </span>
                       {step}
@@ -124,7 +124,7 @@ export default function ExerciseGuideModal({
                 <ul className="space-y-1 text-sm text-zinc-700">
                   {guide.cues.map((cue, i) => (
                     <li key={i} className="flex gap-2">
-                      <span className="text-emerald-700">✓</span>
+                      <span className="text-blue-700">✓</span>
                       {cue}
                     </li>
                   ))}
@@ -157,7 +157,7 @@ export default function ExerciseGuideModal({
             href={videoSearchUrl(exerciseName)}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 rounded-md border border-zinc-300 px-4 py-2.5 text-sm font-medium text-zinc-800 transition hover:border-emerald-500/60 hover:text-zinc-900"
+            className="flex items-center justify-center gap-2 rounded-md border border-zinc-300 px-4 py-2.5 text-sm font-medium text-zinc-800 transition hover:border-blue-500/60 hover:text-zinc-900"
           >
             <span aria-hidden>▶</span> Watch video demonstrations
           </a>

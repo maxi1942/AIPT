@@ -103,6 +103,15 @@ function allowedEquipment(access: EquipmentAccess): Set<string> {
   }
 }
 
+/** Which weekdays (0=Mon..6=Sun) each plan day lands on, keyed by days/week. */
+const WEEKDAY_ASSIGNMENTS: Record<number, number[]> = {
+  2: [0, 3],
+  3: [0, 2, 4],
+  4: [0, 1, 3, 4],
+  5: [0, 1, 2, 3, 4],
+  6: [0, 1, 2, 3, 4, 5],
+};
+
 export interface GeneratedPlanSummary {
   templates: Array<{ id: number; name: string; exercises: number }>;
 }
@@ -127,8 +136,9 @@ export function generatePlan(
   );
 
   const insertTemplate = db.prepare(
-    "INSERT INTO templates (name, description) VALUES (?, ?)"
+    "INSERT INTO templates (name, description, weekday) VALUES (?, ?, ?)"
   );
+  const weekdays = WEEKDAY_ASSIGNMENTS[days.length] ?? [];
   const insertExercise = db.prepare(
     `INSERT INTO template_exercises
        (template_id, exercise_id, position, target_sets, target_reps, target_weight, rest_seconds, notes)
@@ -155,7 +165,8 @@ export function generatePlan(
       const name = `Day ${dayIndex + 1} · ${day.name}`;
       const result = insertTemplate.run(
         name,
-        `${AUTO_PLAN_MARKER} — edit freely, or regenerate from your profile.`
+        `${AUTO_PLAN_MARKER} — edit freely, or regenerate from your profile.`,
+        weekdays[dayIndex] ?? null
       );
       const templateId = Number(result.lastInsertRowid);
 

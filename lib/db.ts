@@ -132,7 +132,22 @@ function migrate(db: Database.Database) {
       notes TEXT NOT NULL DEFAULT ''
     );
     CREATE INDEX IF NOT EXISTS idx_session_exercises ON session_exercises(session_id);
+
+    CREATE TABLE IF NOT EXISTS coach_messages (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      role TEXT NOT NULL CHECK (role IN ('user', 'assistant')),
+      content TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
   `);
+
+  // templates.weekday: 0=Monday .. 6=Sunday, NULL = unscheduled.
+  const templateCols = db
+    .prepare("PRAGMA table_info(templates)")
+    .all() as Array<{ name: string }>;
+  if (!templateCols.some((c) => c.name === "weekday")) {
+    db.exec("ALTER TABLE templates ADD COLUMN weekday INTEGER");
+  }
 
   seedExercises(db);
 }

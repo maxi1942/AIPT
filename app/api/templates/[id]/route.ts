@@ -36,6 +36,10 @@ export async function PUT(req: NextRequest, { params }: Params) {
   const body = await req.json();
   const name = String(body.name ?? "").trim();
   const description = String(body.description ?? "");
+  const weekday =
+    body.weekday === null || body.weekday === undefined || body.weekday === ""
+      ? null
+      : Math.min(6, Math.max(0, Number(body.weekday)));
   const exercises: IncomingTemplateExercise[] = Array.isArray(body.exercises)
     ? body.exercises
     : [];
@@ -57,11 +61,9 @@ export async function PUT(req: NextRequest, { params }: Params) {
   );
 
   db.transaction(() => {
-    db.prepare("UPDATE templates SET name = ?, description = ? WHERE id = ?").run(
-      name,
-      description,
-      id
-    );
+    db.prepare(
+      "UPDATE templates SET name = ?, description = ?, weekday = ? WHERE id = ?"
+    ).run(name, description, weekday, id);
     db.prepare("DELETE FROM template_exercises WHERE template_id = ?").run(id);
     exercises.forEach((ex, i) => {
       insertExercise.run(

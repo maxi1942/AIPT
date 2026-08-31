@@ -97,7 +97,7 @@ export default function ProfileForm({
               onClick={() => setGoal(g.value)}
               className={`rounded-lg border p-3 text-left transition ${
                 goal === g.value
-                  ? "border-emerald-500 bg-emerald-50"
+                  ? "border-blue-500 bg-blue-50"
                   : "border-zinc-300 hover:border-zinc-400"
               }`}
             >
@@ -116,7 +116,7 @@ export default function ProfileForm({
             <select
               value={experience}
               onChange={(e) => setExperience(e.target.value as typeof experience)}
-              className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-500"
+              className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500"
             >
               <option value="beginner">Beginner (&lt; 1 year)</option>
               <option value="intermediate">Intermediate (1-3 years)</option>
@@ -128,7 +128,7 @@ export default function ProfileForm({
             <select
               value={daysPerWeek}
               onChange={(e) => setDaysPerWeek(Number(e.target.value))}
-              className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-500"
+              className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500"
             >
               {[2, 3, 4, 5, 6].map((d) => (
                 <option key={d} value={d}>
@@ -142,7 +142,7 @@ export default function ProfileForm({
             <select
               value={equipment}
               onChange={(e) => setEquipment(e.target.value as typeof equipment)}
-              className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-500"
+              className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500"
             >
               <option value="full_gym">Full gym</option>
               <option value="dumbbells">Dumbbells only</option>
@@ -163,7 +163,7 @@ export default function ProfileForm({
               type="number"
               value={age}
               onChange={(e) => setAge(e.target.value)}
-              className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-500"
+              className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500"
             />
           </div>
           <div>
@@ -172,7 +172,7 @@ export default function ProfileForm({
               type="number"
               value={heightCm}
               onChange={(e) => setHeightCm(e.target.value)}
-              className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-500"
+              className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500"
             />
           </div>
           <div>
@@ -181,7 +181,7 @@ export default function ProfileForm({
               type="number"
               value={weightKg}
               onChange={(e) => setWeightKg(e.target.value)}
-              className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-500"
+              className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500"
             />
           </div>
           <div>
@@ -189,7 +189,7 @@ export default function ProfileForm({
             <select
               value={sex}
               onChange={(e) => setSex(e.target.value)}
-              className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-500"
+              className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500"
             >
               <option value="">—</option>
               <option value="male">Male</option>
@@ -210,7 +210,7 @@ export default function ProfileForm({
         <button
           onClick={handleSaveAndGenerate}
           disabled={busy !== null}
-          className="rounded-md bg-emerald-600 px-5 py-2 text-sm font-semibold text-white hover:bg-emerald-500 disabled:opacity-50"
+          className="rounded-md bg-blue-600 px-5 py-2 text-sm font-semibold text-white hover:bg-blue-500 disabled:opacity-50"
         >
           {busy === "plan" ? "Generating…" : "Save & generate weekly plan"}
         </button>
@@ -221,7 +221,7 @@ export default function ProfileForm({
         >
           {busy === "save" ? "Saving…" : "Save profile only"}
         </button>
-        {saved && <span className="text-sm text-emerald-700">Saved ✓</span>}
+        {saved && <span className="text-sm text-blue-700">Saved ✓</span>}
       </div>
       <p className="text-xs text-zinc-500">
         The generated plan appears under Workouts as normal editable workout

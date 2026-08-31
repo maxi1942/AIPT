@@ -5,8 +5,8 @@ type Level = "primary" | "secondary" | "none";
 
 const NEUTRAL = "#d4d4d8";
 const OUTLINE = "#ffffff";
-const PRIMARY = "#10b981";
-const SECONDARY = "rgba(16, 185, 129, 0.35)";
+const PRIMARY = "#ef4444";
+const SECONDARY = "rgba(239, 68, 68, 0.35)";
 
 function fillFor(level: Level): string {
   if (level === "primary") return PRIMARY;

@@ -58,7 +58,7 @@ export default async function SessionDetailPage({
         {!session.finished_at && (
           <Link
             href={`/workout/${session.id}`}
-            className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-500"
+            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-500"
           >
             Resume workout
           </Link>
@@ -130,7 +130,7 @@ export default async function SessionDetailPage({
                 key={m.id}
                 className={
                   m.role === "user"
-                    ? "ml-8 rounded-lg bg-emerald-100/80 px-3 py-2 text-sm"
+                    ? "ml-8 rounded-lg bg-blue-100/80 px-3 py-2 text-sm"
                     : "mr-4 rounded-lg bg-zinc-100 px-3 py-2 text-sm"
                 }
               >

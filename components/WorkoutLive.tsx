@@ -200,7 +200,7 @@ export default function WorkoutLive({ sessionId }: { sessionId: number }) {
           <button
             onClick={finishWorkout}
             disabled={finishing || finished}
-            className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-500 disabled:opacity-50"
+            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-500 disabled:opacity-50"
           >
             {finished
               ? "Workout finished"
@@ -277,7 +277,7 @@ export default function WorkoutLive({ sessionId }: { sessionId: number }) {
             ) : (
               <button
                 onClick={() => setShowAdd(true)}
-                className="w-full text-sm text-emerald-700 hover:text-emerald-600"
+                className="w-full text-sm text-blue-700 hover:text-blue-600"
               >
                 + Add another exercise
               </button>
@@ -351,12 +351,12 @@ function ExercisePicker({
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
           placeholder={placeholder}
-          className="grow rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-500"
+          className="grow rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500"
         />
         <select
           value={group}
           onChange={(e) => setGroup(e.target.value)}
-          className="rounded-md border border-zinc-300 bg-white px-2 py-2 text-sm outline-none focus:border-emerald-500"
+          className="rounded-md border border-zinc-300 bg-white px-2 py-2 text-sm outline-none focus:border-blue-500"
         >
           {groups.map((g) => (
             <option key={g} value={g}>
@@ -379,7 +379,7 @@ function ExercisePicker({
             </button>
             <button
               onClick={() => setGuideFor(e.name)}
-              className="ml-2 shrink-0 rounded-full border border-zinc-300 px-2 py-0.5 text-xs text-zinc-500 hover:border-emerald-500/60 hover:text-emerald-600"
+              className="ml-2 shrink-0 rounded-full border border-zinc-300 px-2 py-0.5 text-xs text-zinc-500 hover:border-blue-500/60 hover:text-blue-600"
               title={`How to perform ${e.name}`}
             >
               ?
@@ -480,7 +480,7 @@ function ExerciseCard({
   const cardStyle = readOnly
     ? "border-zinc-200 bg-white"
     : status === "active"
-      ? "border-emerald-500/60 bg-white ring-1 ring-emerald-500/25 shadow-sm"
+      ? "border-blue-500/60 bg-white ring-1 ring-blue-500/25 shadow-sm"
       : status === "done"
         ? "border-zinc-200 bg-zinc-50 opacity-70"
         : "border-zinc-200 bg-white opacity-75";
@@ -499,7 +499,7 @@ function ExerciseCard({
               {name}
             </span>
             {!readOnly && status === "active" && (
-              <span className="rounded-full bg-emerald-600 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-white">
+              <span className="rounded-full bg-blue-600 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-white">
                 Now
               </span>
             )}
@@ -513,7 +513,7 @@ function ExerciseCard({
                 e.stopPropagation();
                 setShowGuide(true);
               }}
-              className="rounded-full border border-zinc-300 px-2 py-0.5 text-xs font-medium text-zinc-500 transition hover:border-emerald-500/60 hover:text-emerald-600"
+              className="rounded-full border border-zinc-300 px-2 py-0.5 text-xs font-medium text-zinc-500 transition hover:border-blue-500/60 hover:text-blue-600"
               title={`How to perform ${name}`}
             >
               How to
@@ -567,7 +567,7 @@ function ExerciseCard({
                 e.stopPropagation();
                 onSwap();
               }}
-              className="rounded border border-zinc-300 px-2 py-0.5 text-xs text-zinc-500 hover:border-emerald-500/60 hover:text-emerald-600"
+              className="rounded border border-zinc-300 px-2 py-0.5 text-xs text-zinc-500 hover:border-blue-500/60 hover:text-blue-600"
               title="Swap for another exercise"
             >
               ⇄ Swap
@@ -632,7 +632,7 @@ function ExerciseCard({
               value={reps}
               onChange={(e) => setReps(e.target.value)}
               placeholder={lastSet ? String(lastSet.reps) : "8"}
-              className="w-20 rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm outline-none focus:border-emerald-500"
+              className="w-20 rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm outline-none focus:border-blue-500"
             />
           </div>
           <div>
@@ -645,7 +645,7 @@ function ExerciseCard({
               value={weight}
               onChange={(e) => setWeight(e.target.value)}
               placeholder={lastSet ? String(lastSet.weight) : "0"}
-              className="w-24 rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm outline-none focus:border-emerald-500"
+              className="w-24 rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm outline-none focus:border-blue-500"
             />
           </div>
           <div>
@@ -660,7 +660,7 @@ function ExerciseCard({
               value={rpe}
               onChange={(e) => setRpe(e.target.value)}
               placeholder="—"
-              className="w-16 rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm outline-none focus:border-emerald-500"
+              className="w-16 rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm outline-none focus:border-blue-500"
             />
           </div>
           <button
@@ -800,7 +800,7 @@ function TrainerChat({
       <div className="border-b border-zinc-200 px-4 py-3">
         <div className="flex items-center gap-2">
           <span
-            className={`flex h-2 w-2 rounded-full ${streaming ? "animate-pulse bg-emerald-500" : "bg-emerald-600"}`}
+            className={`flex h-2 w-2 rounded-full ${streaming ? "animate-pulse bg-blue-500" : "bg-blue-600"}`}
           />
           <h2 className="text-sm font-semibold">AI Trainer</h2>
         </div>
@@ -821,7 +821,7 @@ function TrainerChat({
             key={i}
             className={
               m.role === "user"
-                ? "ml-6 rounded-lg bg-emerald-100/80 px-3 py-2 text-sm"
+                ? "ml-6 rounded-lg bg-blue-100/80 px-3 py-2 text-sm"
                 : "mr-2 rounded-lg bg-zinc-100 px-3 py-2 text-sm"
             }
           >
@@ -845,7 +845,7 @@ function TrainerChat({
                 key={q}
                 onClick={() => send(q)}
                 disabled={streaming}
-                className="rounded-full border border-zinc-300 px-2.5 py-1 text-xs text-zinc-700 transition hover:border-emerald-500/60 hover:text-zinc-900 disabled:opacity-40"
+                className="rounded-full border border-zinc-300 px-2.5 py-1 text-xs text-zinc-700 transition hover:border-blue-500/60 hover:text-zinc-900 disabled:opacity-40"
               >
                 {q}
               </button>
@@ -864,12 +864,12 @@ function TrainerChat({
             onChange={(e) => setInput(e.target.value)}
             placeholder="Ask your trainer…"
             disabled={streaming}
-            className="grow rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-500 disabled:opacity-50"
+            className="grow rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500 disabled:opacity-50"
           />
           <button
             type="submit"
             disabled={streaming || !input.trim()}
-            className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-500 disabled:opacity-40"
+            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-500 disabled:opacity-40"
           >
             Send
           </button>

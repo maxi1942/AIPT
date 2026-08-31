@@ -63,7 +63,7 @@ export default function StatsView({
           <select
             value={selected ?? ""}
             onChange={(e) => setSelected(Number(e.target.value))}
-            className="rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-500"
+            className="rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500"
           >
             {exerciseOptions.map((e) => (
               <option key={e.exercise_id} value={e.exercise_id}>
@@ -114,7 +114,7 @@ export default function StatsView({
           <div className="mt-4">
             <button
               onClick={() => setShowTable((v) => !v)}
-              className="text-sm text-emerald-700 hover:text-emerald-600"
+              className="text-sm text-blue-700 hover:text-blue-600"
             >
               {showTable ? "Hide data table" : "View as table"}
             </button>

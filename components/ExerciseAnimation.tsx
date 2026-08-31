@@ -5,7 +5,7 @@ import { getRigForExercise, type Pose, type Rig, type WeightType } from "@/lib/a
 import { capsulePath, type Pt } from "@/lib/figure";
 
 const SCENERY = "#a1a1aa";
-const ACCENT = "#10b981";
+const ACCENT = "#ef4444";
 const IRON = "#3f3f46";
 const HUB = "#fafafa";
 
@@ -67,15 +67,17 @@ function lerpPose(a: Pose, b: Pose, f: number): Pose {
  */
 export default function ExerciseAnimation({
   exerciseName,
+  size = 150,
 }: {
   exerciseName: string;
+  size?: number;
 }) {
   const rig = getRigForExercise(exerciseName);
   if (!rig) return null;
-  return <RigPlayer rig={rig} />;
+  return <RigPlayer rig={rig} size={size} />;
 }
 
-function RigPlayer({ rig }: { rig: Rig }) {
+function RigPlayer({ rig, size = 150 }: { rig: Rig; size?: number }) {
   const [frame, setFrame] = useState<{ pose: Pose; f: number }>({
     pose: rig.poses[0],
     f: 0,
@@ -170,7 +172,7 @@ function RigPlayer({ rig }: { rig: Rig }) {
     pathA && pathB && Math.hypot(pathB[0] - pathA[0], pathB[1] - pathA[1]) > 8;
 
   return (
-    <svg viewBox="0 0 100 100" width="150" height="150" aria-hidden>
+    <svg viewBox="0 0 100 100" width={size} height={size} aria-hidden>
       <defs>
         <linearGradient id="figNear" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="#82828c" />

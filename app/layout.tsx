@@ -18,7 +18,7 @@ export default function RootLayout({
         <header className="border-b border-zinc-200 bg-white">
           <div className="mx-auto flex h-12 max-w-5xl items-center px-4">
             <Link href="/" className="flex items-center gap-2 font-semibold">
-              <span className="flex h-7 w-7 items-center justify-center rounded-md bg-emerald-600 text-sm font-bold text-white">
+              <span className="flex h-7 w-7 items-center justify-center rounded-md bg-blue-600 text-sm font-bold text-white">
                 A
               </span>
               <span>

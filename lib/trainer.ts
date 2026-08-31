@@ -5,7 +5,7 @@ import { GOAL_LABELS } from "./types";
 import type { SetLog, UserProfile, WorkoutSession } from "./types";
 
 /** Evidence-based programming guidance the PT applies, per training goal. */
-const GOAL_COACHING: Record<UserProfile["goal"], string> = {
+export const GOAL_COACHING: Record<UserProfile["goal"], string> = {
   strength: `The lifter's goal is STRENGTH. Coach accordingly:
 - Main lifts: 3-6 reps per set at RPE 7-9, full rest between sets (2-5 minutes — tell them to actually take it).
 - Progress load when all planned sets hit the top of the rep range at RPE ≤ 8: +2.5 kg upper body, +5 kg lower body.

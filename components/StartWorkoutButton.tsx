@@ -38,7 +38,7 @@ export default function StartWorkoutButton({
       disabled={busy}
       className={
         className ||
-        "rounded-md bg-emerald-600 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-emerald-500 disabled:opacity-50"
+        "rounded-md bg-blue-600 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-blue-500 disabled:opacity-50"
       }
     >
       {busy ? "Starting…" : label}

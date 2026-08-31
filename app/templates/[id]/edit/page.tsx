@@ -34,6 +34,7 @@ export default async function EditTemplatePage({
         templateId={template.id}
         initialName={template.name}
         initialDescription={template.description}
+        initialWeekday={template.weekday}
         initialExercises={exercises.map((te) => ({
           exercise_id: te.exercise_id,
           target_sets: te.target_sets,

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import ExerciseGuideModal from "./ExerciseGuideModal";
 import type { Exercise } from "@/lib/types";
+import { WEEKDAY_LABELS } from "@/lib/types";
 
 interface FormExercise {
   exercise_id: number;
@@ -18,6 +19,7 @@ interface TemplateFormProps {
   templateId?: number;
   initialName?: string;
   initialDescription?: string;
+  initialWeekday?: number | null;
   initialExercises?: FormExercise[];
 }
 
@@ -25,11 +27,13 @@ export default function TemplateForm({
   templateId,
   initialName = "",
   initialDescription = "",
+  initialWeekday = null,
   initialExercises = [],
 }: TemplateFormProps) {
   const router = useRouter();
   const [name, setName] = useState(initialName);
   const [description, setDescription] = useState(initialDescription);
+  const [weekday, setWeekday] = useState<number | null>(initialWeekday);
   const [rows, setRows] = useState<FormExercise[]>(initialExercises);
   const [library, setLibrary] = useState<Exercise[]>([]);
   const [filter, setFilter] = useState("");
@@ -136,7 +140,7 @@ export default function TemplateForm({
         {
           method: templateId ? "PUT" : "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name, description, exercises: rows }),
+          body: JSON.stringify({ name, description, weekday, exercises: rows }),
         }
       );
       if (!res.ok) {
@@ -162,7 +166,7 @@ export default function TemplateForm({
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="e.g. Push Day A"
-            className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-500"
+            className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500"
           />
         </div>
         <div>
@@ -174,8 +178,33 @@ export default function TemplateForm({
             onChange={(e) => setDescription(e.target.value)}
             rows={2}
             placeholder="Focus, tempo notes, anything future-you should know"
-            className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-500"
+            className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500"
           />
+        </div>
+        <div>
+          <label className="mb-1 block text-sm font-medium text-zinc-700">
+            Scheduled day <span className="text-zinc-500">(optional)</span>
+          </label>
+          <div className="flex flex-wrap gap-1.5">
+            {WEEKDAY_LABELS.map((day, i) => (
+              <button
+                key={day}
+                type="button"
+                onClick={() => setWeekday(weekday === i ? null : i)}
+                className={`rounded-full px-3 py-1.5 text-xs font-medium transition ${
+                  weekday === i
+                    ? "bg-blue-600 text-white"
+                    : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
+                }`}
+              >
+                {day.slice(0, 3)}
+              </button>
+            ))}
+          </div>
+          <p className="mt-1 text-xs text-zinc-500">
+            Pick a day to place this workout in your weekly plan. Tap again to
+            unschedule.
+          </p>
         </div>
       </div>
 
@@ -203,7 +232,7 @@ export default function TemplateForm({
                     {exercise && (
                       <button
                         onClick={() => setGuideFor(exercise.name)}
-                        className="ml-2 rounded-full border border-zinc-300 px-2 py-0.5 text-xs text-zinc-500 transition hover:border-emerald-500/60 hover:text-emerald-600"
+                        className="ml-2 rounded-full border border-zinc-300 px-2 py-0.5 text-xs text-zinc-500 transition hover:border-blue-500/60 hover:text-blue-600"
                         title={`How to perform ${exercise.name}`}
                       >
                         How to
@@ -282,7 +311,7 @@ export default function TemplateForm({
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
             placeholder="Search exercises (e.g. squat, chest…)"
-            className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-500"
+            className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500"
           />
           {filter && (
             <div className="mt-2 max-h-56 overflow-y-auto rounded-md border border-zinc-200">
@@ -307,7 +336,7 @@ export default function TemplateForm({
                     </button>
                     <button
                       onClick={() => setGuideFor(e.name)}
-                      className="ml-2 shrink-0 rounded-full border border-zinc-300 px-2 py-0.5 text-xs text-zinc-500 transition hover:border-emerald-500/60 hover:text-emerald-600"
+                      className="ml-2 shrink-0 rounded-full border border-zinc-300 px-2 py-0.5 text-xs text-zinc-500 transition hover:border-blue-500/60 hover:text-blue-600"
                       title={`How to perform ${e.name}`}
                     >
                       ?
@@ -327,7 +356,7 @@ export default function TemplateForm({
                   <input
                     value={customName}
                     onChange={(e) => setCustomName(e.target.value)}
-                    className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-500"
+                    className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500"
                   />
                 </div>
                 <div>
@@ -337,7 +366,7 @@ export default function TemplateForm({
                   <select
                     value={customGroup}
                     onChange={(e) => setCustomGroup(e.target.value)}
-                    className="rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-500"
+                    className="rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500"
                   >
                     {[
                       "Chest",
@@ -369,7 +398,7 @@ export default function TemplateForm({
             ) : (
               <button
                 onClick={() => setShowCustom(true)}
-                className="text-sm text-emerald-700 hover:text-emerald-600"
+                className="text-sm text-blue-700 hover:text-blue-600"
               >
                 + Can&apos;t find it? Add a custom exercise
               </button>
@@ -388,7 +417,7 @@ export default function TemplateForm({
         <button
           onClick={save}
           disabled={saving}
-          className="rounded-md bg-emerald-600 px-5 py-2 text-sm font-semibold text-white hover:bg-emerald-500 disabled:opacity-50"
+          className="rounded-md bg-blue-600 px-5 py-2 text-sm font-semibold text-white hover:bg-blue-500 disabled:opacity-50"
         >
           {saving ? "Saving…" : templateId ? "Save changes" : "Create workout"}
         </button>
@@ -431,7 +460,7 @@ function LabeledInput({
         value={value}
         placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm outline-none focus:border-emerald-500"
+        className="w-full rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm outline-none focus:border-blue-500"
       />
     </div>
   );

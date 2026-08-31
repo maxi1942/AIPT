@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getDb } from "@/lib/db";
 import StartWorkoutButton from "@/components/StartWorkoutButton";
 import DeleteTemplateButton from "@/components/DeleteTemplateButton";
+import { WEEKDAY_LABELS } from "@/lib/types";
 import type { Template, TemplateExercise } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -38,7 +39,7 @@ export default function TemplatesPage() {
         </div>
         <Link
           href="/templates/new"
-          className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-500"
+          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-500"
         >
           + New workout
         </Link>
@@ -59,7 +60,19 @@ export default function TemplatesPage() {
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <h2 className="text-lg font-semibold">{t.name}</h2>
+                    <h2 className="text-lg font-semibold">
+                      <Link
+                        href={`/templates/${t.id}`}
+                        className="hover:text-blue-700"
+                      >
+                        {t.name}
+                      </Link>
+                      {t.weekday !== null && (
+                        <span className="ml-2 align-middle rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-semibold text-blue-600">
+                          {WEEKDAY_LABELS[t.weekday]}s
+                        </span>
+                      )}
+                    </h2>
                     {t.description && (
                       <p className="mt-1 text-sm text-zinc-500">
                         {t.description}

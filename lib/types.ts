@@ -11,7 +11,26 @@ export interface Template {
   name: string;
   description: string;
   created_at: string;
+  /** 0 = Monday .. 6 = Sunday, null = unscheduled. */
+  weekday: number | null;
   exercise_count?: number;
+}
+
+export const WEEKDAY_LABELS = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
+] as const;
+
+export interface CoachMessage {
+  id: number;
+  role: "user" | "assistant";
+  content: string;
+  created_at: string;
 }
 
 export interface TemplateExercise {

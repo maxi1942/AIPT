@@ -32,7 +32,7 @@ function formatNum(v: number): string {
 /** Single-series line chart with crosshair + tooltip. */
 export function LineChart({
   data,
-  color = "#0284c7",
+  color = "#d97706",
   unit = "",
 }: {
   data: ChartPoint[];
@@ -173,7 +173,7 @@ export function LineChart({
 /** Single-series bar chart with rounded data-ends and hover tooltip. */
 export function BarChart({
   data,
-  color = "#10b981",
+  color = "#3b82f6",
   unit = "",
 }: {
   data: ChartPoint[];

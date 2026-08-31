@@ -28,6 +28,10 @@ export async function POST(req: NextRequest) {
   const body = await req.json();
   const name = String(body.name ?? "").trim();
   const description = String(body.description ?? "");
+  const weekday =
+    body.weekday === null || body.weekday === undefined || body.weekday === ""
+      ? null
+      : Math.min(6, Math.max(0, Number(body.weekday)));
   const exercises: IncomingTemplateExercise[] = Array.isArray(body.exercises)
     ? body.exercises
     : [];
@@ -44,7 +48,7 @@ export async function POST(req: NextRequest) {
 
   const db = getDb();
   const insertTemplate = db.prepare(
-    "INSERT INTO templates (name, description) VALUES (?, ?)"
+    "INSERT INTO templates (name, description, weekday) VALUES (?, ?, ?)"
   );
   const insertExercise = db.prepare(
     `INSERT INTO template_exercises
@@ -53,7 +57,7 @@ export async function POST(req: NextRequest) {
   );
 
   const templateId = db.transaction(() => {
-    const result = insertTemplate.run(name, description);
+    const result = insertTemplate.run(name, description, weekday);
     const id = Number(result.lastInsertRowid);
     exercises.forEach((ex, i) => {
       insertExercise.run(

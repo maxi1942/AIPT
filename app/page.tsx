@@ -1,14 +1,18 @@
-import Link from "next/link";
 import { getDb } from "@/lib/db";
-import { getOverviewStats } from "@/lib/stats";
-import StartWorkoutButton from "@/components/StartWorkoutButton";
-import type { Template, WorkoutSession } from "@/lib/types";
+import { getNextUp } from "@/lib/schedule";
+import CoachChat, { type NextUpInfo } from "@/components/CoachChat";
+import type { CoachMessage, WorkoutSession } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
-export default function DashboardPage() {
+export default function CoachPage() {
   const db = getDb();
-  const stats = getOverviewStats();
+
+  const messages = db
+    .prepare(
+      "SELECT role, content FROM coach_messages ORDER BY created_at ASC, id ASC"
+    )
+    .all() as Pick<CoachMessage, "role" | "content">[];
 
   const activeSession = db
     .prepare(
@@ -20,187 +24,33 @@ export default function DashboardPage() {
     .prepare("SELECT id FROM user_profile WHERE id = 1")
     .get();
 
-  const templates = db
-    .prepare(
-      `SELECT t.*, COUNT(te.id) AS exercise_count
-       FROM templates t
-       LEFT JOIN template_exercises te ON te.template_id = t.id
-       GROUP BY t.id
-       ORDER BY t.created_at DESC
-       LIMIT 6`
-    )
-    .all() as Template[];
-
-  const recentSessions = db
-    .prepare(
-      `SELECT w.*, COUNT(s.id) AS set_count,
-              COALESCE(ROUND(SUM(s.reps * s.weight)), 0) AS total_volume
-       FROM workout_sessions w
-       LEFT JOIN set_logs s ON s.session_id = w.id
-       WHERE w.finished_at IS NOT NULL
-       GROUP BY w.id
-       ORDER BY w.started_at DESC
-       LIMIT 5`
-    )
-    .all() as Array<WorkoutSession & { set_count: number; total_volume: number }>;
+  const nextUpRaw = getNextUp(db);
+  const nextUp: NextUpInfo | null = nextUpRaw
+    ? {
+        templateId: nextUpRaw.template.id,
+        name: nextUpRaw.template.name,
+        when: nextUpRaw.when,
+        exerciseCount: nextUpRaw.template.exercise_count,
+        estMinutes: nextUpRaw.template.est_minutes,
+      }
+    : null;
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold">Dashboard</h1>
-        <p className="mt-1 text-sm text-zinc-500">
-          Design a workout, start training, and let your AI trainer push you
-          forward.
-        </p>
+    <div>
+      <div className="mb-4 flex items-center gap-2">
+        <h1 className="text-2xl font-bold">Coach</h1>
+        <span className="mt-1 flex h-2 w-2 rounded-full bg-blue-500" />
       </div>
-
-      {!hasProfile && (
-        <Link
-          href="/profile"
-          className="flex items-center justify-between rounded-lg border border-sky-300 bg-sky-50 px-4 py-3 transition hover:bg-sky-100"
-        >
-          <div>
-            <div className="text-sm font-semibold text-sky-700">
-              Set up your profile
-            </div>
-            <div className="text-sm text-zinc-700">
-              Pick your goal and schedule — AIPT generates your weekly plan and
-              tailors the AI trainer to you.
-            </div>
-          </div>
-          <span className="text-sm font-semibold text-sky-700">Start →</span>
-        </Link>
-      )}
-
-      {activeSession && (
-        <Link
-          href={`/workout/${activeSession.id}`}
-          className="flex items-center justify-between rounded-lg border border-emerald-300 bg-emerald-50 px-4 py-3 transition hover:bg-emerald-100"
-        >
-          <div>
-            <div className="text-sm font-semibold text-emerald-700">
-              Workout in progress
-            </div>
-            <div className="text-sm text-zinc-700">{activeSession.name}</div>
-          </div>
-          <span className="text-sm font-semibold text-emerald-700">
-            Resume →
-          </span>
-        </Link>
-      )}
-
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <StatTile label="Workouts (30 days)" value={stats.sessionsLast30Days} />
-        <StatTile label="Workouts total" value={stats.totalSessions} />
-        <StatTile label="Sets logged" value={stats.totalSets} />
-        <StatTile
-          label="Volume lifted"
-          value={`${formatVolume(stats.totalVolume)} kg`}
-        />
-      </div>
-
-      <section>
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Your workouts</h2>
-          <Link
-            href="/templates/new"
-            className="text-sm font-medium text-emerald-700 hover:text-emerald-600"
-          >
-            + New workout
-          </Link>
-        </div>
-        {templates.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-zinc-300 p-8 text-center">
-            <p className="text-zinc-500">
-              No workouts yet. Design your first one to get started.
-            </p>
-            <Link
-              href="/templates/new"
-              className="mt-4 inline-block rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-500"
-            >
-              Design a workout
-            </Link>
-          </div>
-        ) : (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {templates.map((t) => (
-              <div
-                key={t.id}
-                className="flex flex-col justify-between rounded-lg border border-zinc-200 bg-white p-4"
-              >
-                <div>
-                  <div className="font-semibold">{t.name}</div>
-                  <div className="mt-1 text-xs text-zinc-500">
-                    {t.exercise_count} exercise
-                    {t.exercise_count === 1 ? "" : "s"}
-                  </div>
-                  {t.description && (
-                    <p className="mt-2 line-clamp-2 text-sm text-zinc-500">
-                      {t.description}
-                    </p>
-                  )}
-                </div>
-                <div className="mt-4">
-                  <StartWorkoutButton templateId={t.id} />
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
-
-      <section>
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Recent sessions</h2>
-          <Link
-            href="/history"
-            className="text-sm font-medium text-emerald-700 hover:text-emerald-600"
-          >
-            View all
-          </Link>
-        </div>
-        {recentSessions.length === 0 ? (
-          <p className="text-sm text-zinc-500">
-            Nothing logged yet — your finished workouts will show up here.
-          </p>
-        ) : (
-          <div className="divide-y divide-zinc-200 rounded-lg border border-zinc-200 bg-white">
-            {recentSessions.map((s) => (
-              <Link
-                key={s.id}
-                href={`/history/${s.id}`}
-                className="flex items-center justify-between px-4 py-3 transition hover:bg-zinc-50"
-              >
-                <div>
-                  <div className="text-sm font-medium">{s.name}</div>
-                  <div className="text-xs text-zinc-500">
-                    {s.started_at.slice(0, 10)}
-                  </div>
-                </div>
-                <div className="text-right text-xs text-zinc-500">
-                  <div>{s.set_count} sets</div>
-                  <div>{formatVolume(s.total_volume)} kg</div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        )}
-      </section>
+      <CoachChat
+        initialMessages={messages}
+        nextUp={nextUp}
+        activeSession={
+          activeSession
+            ? { id: activeSession.id, name: activeSession.name }
+            : null
+        }
+        hasProfile={hasProfile}
+      />
     </div>
   );
-}
-
-function StatTile({ label, value }: { label: string; value: number | string }) {
-  return (
-    <div className="rounded-lg border border-zinc-200 bg-white p-4">
-      <div className="text-xs text-zinc-500">{label}</div>
-      <div className="mt-1 text-2xl font-bold tabular-nums">{value}</div>
-    </div>
-  );
-}
-
-function formatVolume(v: number): string {
-  if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
-  if (v >= 10_000) return `${Math.round(v / 1000)}k`;
-  return String(v);
 }
