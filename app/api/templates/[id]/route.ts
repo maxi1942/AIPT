@@ -83,6 +83,55 @@ export async function PUT(req: NextRequest, { params }: Params) {
   return NextResponse.json(template);
 }
 
+/** Swap one exercise in the template for another, keeping sets/reps/rest. */
+export async function PATCH(req: NextRequest, { params }: Params) {
+  const { id } = await params;
+  const body = await req.json();
+  const rowId = Number(body.template_exercise_id);
+  const newExerciseId = Number(body.new_exercise_id);
+
+  if (!rowId || !newExerciseId) {
+    return NextResponse.json(
+      { error: "template_exercise_id and new_exercise_id are required" },
+      { status: 400 }
+    );
+  }
+
+  const db = getDb();
+  const row = db
+    .prepare(
+      "SELECT id FROM template_exercises WHERE id = ? AND template_id = ?"
+    )
+    .get(rowId, id);
+  if (!row) {
+    return NextResponse.json(
+      { error: "Exercise not found in this workout" },
+      { status: 404 }
+    );
+  }
+  const exercise = db
+    .prepare("SELECT id FROM exercises WHERE id = ?")
+    .get(newExerciseId);
+  if (!exercise) {
+    return NextResponse.json({ error: "Exercise not found" }, { status: 404 });
+  }
+
+  db.prepare("UPDATE template_exercises SET exercise_id = ? WHERE id = ?").run(
+    newExerciseId,
+    rowId
+  );
+
+  const updated = db
+    .prepare(
+      `SELECT te.*, e.name AS exercise_name, e.muscle_group, e.equipment
+       FROM template_exercises te
+       JOIN exercises e ON e.id = te.exercise_id
+       WHERE te.id = ?`
+    )
+    .get(rowId);
+  return NextResponse.json(updated);
+}
+
 export async function DELETE(_req: NextRequest, { params }: Params) {
   const { id } = await params;
   const db = getDb();

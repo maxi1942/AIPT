@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getDb } from "@/lib/db";
-import ExerciseAnimation from "@/components/ExerciseAnimation";
 import StartWorkoutButton from "@/components/StartWorkoutButton";
+import TemplateExerciseList from "@/components/TemplateExerciseList";
 import { WEEKDAY_LABELS } from "@/lib/types";
-import type { Template, TemplateExercise } from "@/lib/types";
+import type { Exercise, Template, TemplateExercise } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +29,10 @@ export default async function TemplateDetailPage({
        ORDER BY te.position ASC`
     )
     .all(id) as TemplateExercise[];
+
+  const library = db
+    .prepare("SELECT * FROM exercises ORDER BY name ASC")
+    .all() as Exercise[];
 
   const totalSets = exercises.reduce((sum, e) => sum + e.target_sets, 0);
   const estSeconds = exercises.reduce(
@@ -78,42 +82,24 @@ export default async function TemplateDetailPage({
         </Link>
       </div>
 
-      <div className="divide-y divide-zinc-200 rounded-2xl border border-zinc-200 bg-white">
-        {exercises.map((ex) => (
-          <div key={ex.id} className="flex items-center gap-3 px-4 py-3">
-            <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-zinc-100/80">
-              <ExerciseAnimation
-                exerciseName={ex.exercise_name ?? ""}
-                size={64}
-              />
-            </div>
-            <div className="min-w-0">
-              <div className="truncate text-sm font-semibold text-zinc-900">
-                {ex.exercise_name}
-              </div>
-              <div className="mt-0.5 text-xs text-zinc-500">
-                {ex.target_sets} sets of {ex.target_reps} reps
-                {ex.target_weight != null ? ` @ ${ex.target_weight} kg` : ""}
-              </div>
-              <div className="mt-0.5 text-xs text-zinc-400">
-                {ex.muscle_group} · rest {ex.rest_seconds}s
-              </div>
-            </div>
-          </div>
-        ))}
-        {exercises.length === 0 && (
-          <div className="px-4 py-8 text-center text-sm text-zinc-500">
-            No exercises in this workout yet —{" "}
-            <Link
-              href={`/templates/${template.id}/edit`}
-              className="font-medium text-blue-700 hover:text-blue-600"
-            >
-              add some
-            </Link>
-            .
-          </div>
-        )}
-      </div>
+      {exercises.length === 0 ? (
+        <div className="rounded-2xl border border-zinc-200 bg-white px-4 py-8 text-center text-sm text-zinc-500">
+          No exercises in this workout yet —{" "}
+          <Link
+            href={`/templates/${template.id}/edit`}
+            className="font-medium text-blue-700 hover:text-blue-600"
+          >
+            add some
+          </Link>
+          .
+        </div>
+      ) : (
+        <TemplateExerciseList
+          templateId={template.id}
+          exercises={exercises}
+          library={library}
+        />
+      )}
     </div>
   );
 }
