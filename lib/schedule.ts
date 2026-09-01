@@ -33,7 +33,10 @@ function scheduledTemplates(db: Database.Database): ScheduledTemplate[] {
       `SELECT t.*,
               COUNT(te.id) AS exercise_count,
               COALESCE(SUM(te.target_sets), 0) AS total_sets,
-              COALESCE(SUM(te.target_sets * (te.rest_seconds + 45)), 0) AS est_seconds
+              COALESCE(SUM(te.target_sets *
+                (CASE WHEN te.target_duration_min IS NOT NULL
+                      THEN te.target_duration_min * 60 + te.rest_seconds
+                      ELSE te.rest_seconds + 45 END)), 0) AS est_seconds
        FROM templates t
        LEFT JOIN template_exercises te ON te.template_id = t.id
        GROUP BY t.id

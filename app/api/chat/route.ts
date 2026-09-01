@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { NextRequest, NextResponse } from "next/server";
+import { cardioEffortStr } from "@/lib/cardio";
 import { getDb } from "@/lib/db";
 import { buildTrainerSystemPrompt } from "@/lib/trainer";
 import type { ChatMessage, SetLog } from "@/lib/types";
@@ -63,7 +64,13 @@ export async function POST(req: NextRequest) {
     if (!set) {
       return NextResponse.json({ error: "Set not found" }, { status: 404 });
     }
-    eventInstruction = `SESSION EVENT: The lifter just logged ${set.exercise_name} set ${set.set_number}: ${set.reps} reps x ${set.weight} kg${set.rpe != null ? ` at RPE ${set.rpe}` : ""}. Give instant PT feedback in 1-2 short sentences:
+    const isCardioLog =
+      set.duration_seconds != null || set.distance_km != null;
+    eventInstruction = isCardioLog
+      ? `SESSION EVENT: The lifter just logged a cardio effort — ${set.exercise_name}: ${cardioEffortStr(set)}. Give instant PT feedback in 1-2 short sentences:
+- Judge it against the planned duration/zone and their cardio history (was the HR in zone? pace vs last time at similar HR?).
+- Tell them exactly what to do next: continue/another interval (with work and recovery times), or which exercise is next.${set.avg_hr == null ? `\n- If they have a HR reading available, ask for the average HR — it sharpens the zone coaching.` : ""}`
+      : `SESSION EVENT: The lifter just logged ${set.exercise_name} set ${set.set_number}: ${set.reps} reps x ${set.weight} kg${set.rpe != null ? ` at RPE ${set.rpe}` : ""}. Give instant PT feedback in 1-2 short sentences:
 - Judge it against today's target and their history (PR? beat last session? below target?).
 - Tell them exactly what to do next: weight/reps for the next set and rest time — or, if that exercise is done, which exercise is next.${set.rpe == null ? `\n- If it changes your call, you may ask how it felt (easy/hard).` : ""}`;
   } else if (event) {

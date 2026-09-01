@@ -8,18 +8,50 @@ export async function POST(req: NextRequest, { params }: Params) {
   const body = await req.json();
 
   const exerciseId = Number(body.exercise_id);
-  const reps = Number(body.reps);
-  const weight = Number(body.weight ?? 0);
   const rpe = body.rpe != null && body.rpe !== "" ? Number(body.rpe) : null;
 
-  if (!exerciseId || !Number.isFinite(reps) || reps <= 0) {
+  // Cardio effort: time and/or distance, optional average heart rate.
+  const durationMin =
+    body.duration_min != null && body.duration_min !== ""
+      ? Number(body.duration_min)
+      : null;
+  const distanceKm =
+    body.distance_km != null && body.distance_km !== ""
+      ? Number(body.distance_km)
+      : null;
+  const avgHr =
+    body.avg_hr != null && body.avg_hr !== "" ? Number(body.avg_hr) : null;
+  const isCardio =
+    (durationMin != null && durationMin > 0) ||
+    (distanceKm != null && distanceKm > 0);
+
+  const reps = isCardio ? 0 : Number(body.reps);
+  const weight = isCardio ? 0 : Number(body.weight ?? 0);
+
+  if (!exerciseId) {
     return NextResponse.json(
-      { error: "exercise_id and a positive reps value are required" },
+      { error: "exercise_id is required" },
+      { status: 400 }
+    );
+  }
+  if (!isCardio && (!Number.isFinite(reps) || reps <= 0)) {
+    return NextResponse.json(
+      { error: "A positive reps value — or a cardio duration/distance — is required" },
       { status: 400 }
     );
   }
   if (!Number.isFinite(weight) || weight < 0) {
     return NextResponse.json({ error: "Invalid weight" }, { status: 400 });
+  }
+  if (
+    (durationMin != null && (!Number.isFinite(durationMin) || durationMin < 0)) ||
+    (distanceKm != null && (!Number.isFinite(distanceKm) || distanceKm < 0)) ||
+    (avgHr != null && (!Number.isFinite(avgHr) || avgHr < 30 || avgHr > 250))
+  ) {
+    return NextResponse.json(
+      { error: "Invalid duration, distance, or heart rate" },
+      { status: 400 }
+    );
   }
   if (rpe != null && (!Number.isFinite(rpe) || rpe < 1 || rpe > 10)) {
     return NextResponse.json(
@@ -44,9 +76,21 @@ export async function POST(req: NextRequest, { params }: Params) {
 
   const result = db
     .prepare(
-      "INSERT INTO set_logs (session_id, exercise_id, set_number, reps, weight, rpe) VALUES (?, ?, ?, ?, ?, ?)"
+      `INSERT INTO set_logs
+         (session_id, exercise_id, set_number, reps, weight, rpe, duration_seconds, distance_km, avg_hr)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
     )
-    .run(id, exerciseId, nextSet.n, reps, weight, rpe);
+    .run(
+      id,
+      exerciseId,
+      nextSet.n,
+      reps,
+      weight,
+      rpe,
+      isCardio && durationMin ? Math.round(durationMin * 60) : null,
+      isCardio ? distanceKm : null,
+      isCardio ? avgHr : null
+    );
 
   const set = db
     .prepare(

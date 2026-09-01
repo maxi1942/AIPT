@@ -1,3 +1,4 @@
+import { CARDIO_BY_GOAL, zonesPromptBlock } from "./cardio";
 import { getDb } from "./db";
 import { getWeekPlan, getNextUp } from "./schedule";
 import { getOverviewStats } from "./stats";
@@ -112,9 +113,12 @@ export function buildCoachSystemPrompt(): string {
   lines.push(
     `- Lifetime sets logged: ${overview.totalSets}, lifetime volume: ${Math.round(overview.totalVolume)} kg`
   );
+  lines.push(
+    `- Cardio in the last 30 days: ${overview.cardioMinutesLast30Days} min, ${overview.cardioKmLast30Days} km`
+  );
 
   const goalBlock = profile
-    ? GOAL_COACHING[profile.goal]
+    ? `${GOAL_COACHING[profile.goal]}\n\n${CARDIO_BY_GOAL[profile.goal]}\n\n${zonesPromptBlock(profile.age)}`
     : "The lifter has not set a goal yet — coach for general fitness (8-12 reps, RPE 7-9, 90s rest) and suggest they set up their profile for tailored programming.";
 
   return `You are the lifter's personal trainer inside their workout app — the first thing they see when they open it. All data below comes straight from the app's database and is the ground truth.

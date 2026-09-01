@@ -2,11 +2,11 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
-import ExerciseAnimation from "./ExerciseAnimation";
 import ExerciseGuideModal from "./ExerciseGuideModal";
+import ExerciseThumb from "./ExerciseThumb";
 import type { Exercise } from "@/lib/types";
 
-const GROUPS = ["", "Chest", "Back", "Legs", "Shoulders", "Arms", "Core", "Full Body"];
+const GROUPS = ["", "Chest", "Back", "Legs", "Shoulders", "Arms", "Core", "Full Body", "Cardio"];
 
 /**
  * Bottom-sheet exercise library picker, shared by the workout detail view
@@ -119,7 +119,7 @@ export default function ExercisePickerSheet({
                 className="flex grow items-center gap-3 text-left disabled:opacity-50"
               >
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-zinc-100/80">
-                  <ExerciseAnimation exerciseName={e.name} size={48} />
+                  <ExerciseThumb exerciseName={e.name} size={48} />
                 </div>
                 <div className="min-w-0">
                   <div className="truncate text-sm font-medium text-zinc-900">

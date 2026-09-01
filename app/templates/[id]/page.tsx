@@ -22,7 +22,7 @@ export default async function TemplateDetailPage({
 
   const exercises = db
     .prepare(
-      `SELECT te.*, e.name AS exercise_name, e.muscle_group, e.equipment
+      `SELECT te.*, e.name AS exercise_name, e.muscle_group, e.equipment, e.kind AS exercise_kind
        FROM template_exercises te
        JOIN exercises e ON e.id = te.exercise_id
        WHERE te.template_id = ?
@@ -34,9 +34,17 @@ export default async function TemplateDetailPage({
     .prepare("SELECT * FROM exercises ORDER BY name ASC")
     .all() as Exercise[];
 
-  const totalSets = exercises.reduce((sum, e) => sum + e.target_sets, 0);
+  const strengthExercises = exercises.filter(
+    (e) => e.exercise_kind !== "cardio"
+  );
+  const totalSets = strengthExercises.reduce((s, e) => s + e.target_sets, 0);
   const estSeconds = exercises.reduce(
-    (sum, e) => sum + e.target_sets * (e.rest_seconds + 45),
+    (sum, e) =>
+      sum +
+      (e.exercise_kind === "cardio"
+        ? e.target_sets *
+          ((e.target_duration_min ?? 20) * 60 + e.rest_seconds)
+        : e.target_sets * (e.rest_seconds + 45)),
     0
   );
   const estMinutes = Math.max(10, Math.round(estSeconds / 60 / 5) * 5);

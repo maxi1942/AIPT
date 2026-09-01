@@ -14,7 +14,12 @@ interface FormExercise {
   target_weight: number | null;
   rest_seconds: number;
   notes: string;
+  target_duration_min?: number | null;
+  target_distance_km?: number | null;
+  target_zone?: string | null;
 }
+
+const ZONE_OPTIONS = ["", "Z1", "Z2", "Z3", "Z4", "Z5"];
 
 interface TemplateFormProps {
   templateId?: number;
@@ -71,16 +76,29 @@ export default function TemplateForm({
   }, [library, filter, rows]);
 
   function addExercise(exerciseId: number) {
+    const isCardio = exerciseById.get(exerciseId)?.kind === "cardio";
     setRows((prev) => [
       ...prev,
-      {
-        exercise_id: exerciseId,
-        target_sets: 3,
-        target_reps: "8-12",
-        target_weight: null,
-        rest_seconds: 90,
-        notes: "",
-      },
+      isCardio
+        ? {
+            exercise_id: exerciseId,
+            target_sets: 1,
+            target_reps: "",
+            target_weight: null,
+            rest_seconds: 0,
+            notes: "",
+            target_duration_min: 20,
+            target_distance_km: null,
+            target_zone: "Z2",
+          }
+        : {
+            exercise_id: exerciseId,
+            target_sets: 3,
+            target_reps: "8-12",
+            target_weight: null,
+            rest_seconds: 90,
+            notes: "",
+          },
     ]);
     setFilter("");
   }
@@ -284,41 +302,106 @@ export default function TemplateForm({
                     </button>
                   </div>
                 </div>
-                <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                  <LabeledInput
-                    label="Sets"
-                    type="number"
-                    value={String(row.target_sets)}
-                    onChange={(v) =>
-                      updateRow(i, { target_sets: Math.max(1, Number(v) || 1) })
-                    }
-                  />
-                  <LabeledInput
-                    label="Reps"
-                    value={row.target_reps}
-                    onChange={(v) => updateRow(i, { target_reps: v })}
-                    placeholder="8-12"
-                  />
-                  <LabeledInput
-                    label="Weight (kg)"
-                    type="number"
-                    value={row.target_weight == null ? "" : String(row.target_weight)}
-                    onChange={(v) =>
-                      updateRow(i, {
-                        target_weight: v === "" ? null : Number(v),
-                      })
-                    }
-                    placeholder="—"
-                  />
-                  <LabeledInput
-                    label="Rest (s)"
-                    type="number"
-                    value={String(row.rest_seconds)}
-                    onChange={(v) =>
-                      updateRow(i, { rest_seconds: Math.max(0, Number(v) || 0) })
-                    }
-                  />
-                </div>
+                {exercise?.kind === "cardio" ? (
+                  <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                    <LabeledInput
+                      label="Time (min)"
+                      type="number"
+                      value={
+                        row.target_duration_min == null
+                          ? ""
+                          : String(row.target_duration_min)
+                      }
+                      onChange={(v) =>
+                        updateRow(i, {
+                          target_duration_min: v === "" ? null : Number(v),
+                        })
+                      }
+                      placeholder="20"
+                    />
+                    <LabeledInput
+                      label="Distance (km)"
+                      type="number"
+                      value={
+                        row.target_distance_km == null
+                          ? ""
+                          : String(row.target_distance_km)
+                      }
+                      onChange={(v) =>
+                        updateRow(i, {
+                          target_distance_km: v === "" ? null : Number(v),
+                        })
+                      }
+                      placeholder="—"
+                    />
+                    <div>
+                      <label className="mb-1 block text-xs text-zinc-500">
+                        HR zone
+                      </label>
+                      <select
+                        value={row.target_zone ?? ""}
+                        onChange={(e) =>
+                          updateRow(i, {
+                            target_zone: e.target.value || null,
+                          })
+                        }
+                        className="w-full rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm outline-none focus:border-blue-500"
+                      >
+                        {ZONE_OPTIONS.map((z) => (
+                          <option key={z} value={z}>
+                            {z === "" ? "—" : z}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <LabeledInput
+                      label="Intervals"
+                      type="number"
+                      value={String(row.target_sets)}
+                      onChange={(v) =>
+                        updateRow(i, {
+                          target_sets: Math.max(1, Number(v) || 1),
+                        })
+                      }
+                    />
+                  </div>
+                ) : (
+                  <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                    <LabeledInput
+                      label="Sets"
+                      type="number"
+                      value={String(row.target_sets)}
+                      onChange={(v) =>
+                        updateRow(i, { target_sets: Math.max(1, Number(v) || 1) })
+                      }
+                    />
+                    <LabeledInput
+                      label="Reps"
+                      value={row.target_reps}
+                      onChange={(v) => updateRow(i, { target_reps: v })}
+                      placeholder="8-12"
+                    />
+                    <LabeledInput
+                      label="Weight (kg)"
+                      type="number"
+                      value={row.target_weight == null ? "" : String(row.target_weight)}
+                      onChange={(v) =>
+                        updateRow(i, {
+                          target_weight: v === "" ? null : Number(v),
+                        })
+                      }
+                      placeholder="—"
+                    />
+                    <LabeledInput
+                      label="Rest (s)"
+                      type="number"
+                      value={String(row.rest_seconds)}
+                      onChange={(v) =>
+                        updateRow(i, { rest_seconds: Math.max(0, Number(v) || 0) })
+                      }
+                    />
+                  </div>
+                )}
               </div>
             );
           })}
@@ -467,7 +550,34 @@ export default function TemplateForm({
             exerciseById.get(rows[swapIndex].exercise_id)?.muscle_group ?? ""
           }
           onPick={(exercise) => {
-            updateRow(swapIndex, { exercise_id: exercise.id });
+            const oldKind = exerciseById.get(rows[swapIndex].exercise_id)?.kind;
+            if (exercise.kind !== oldKind) {
+              // Crossing strength <-> cardio: reset targets to kind defaults.
+              updateRow(swapIndex, {
+                exercise_id: exercise.id,
+                ...(exercise.kind === "cardio"
+                  ? {
+                      target_sets: 1,
+                      target_reps: "",
+                      target_weight: null,
+                      rest_seconds: 0,
+                      target_duration_min: 20,
+                      target_distance_km: null,
+                      target_zone: "Z2",
+                    }
+                  : {
+                      target_sets: 3,
+                      target_reps: "8-12",
+                      target_weight: null,
+                      rest_seconds: 90,
+                      target_duration_min: null,
+                      target_distance_km: null,
+                      target_zone: null,
+                    }),
+              });
+            } else {
+              updateRow(swapIndex, { exercise_id: exercise.id });
+            }
             setSwapIndex(null);
           }}
           onClose={() => setSwapIndex(null)}

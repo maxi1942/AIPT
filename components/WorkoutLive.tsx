@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import ExerciseGuideModal from "./ExerciseGuideModal";
+import { cardioEffortStr, zoneLabel } from "@/lib/cardio";
 import type {
   Exercise,
   SessionDetail,
@@ -87,11 +88,11 @@ export default function WorkoutLive({ sessionId }: { sessionId: number }) {
     return list;
   }, [detail]);
 
-  async function logSet(exerciseId: number, reps: number, weight: number, rpe: string) {
+  async function logSet(exerciseId: number, payload: Record<string, unknown>) {
     const res = await fetch(`/api/sessions/${sessionId}/sets`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ exercise_id: exerciseId, reps, weight, rpe }),
+      body: JSON.stringify({ exercise_id: exerciseId, ...payload }),
     });
     if (res.ok) {
       const set: SetLog = await res.json();
@@ -230,11 +231,15 @@ export default function WorkoutLive({ sessionId }: { sessionId: number }) {
             const expanded = finished
               ? true
               : (expandOverride[key] ?? status === "active");
+            const isCardio =
+              card.planned?.exercise_kind === "cardio" ||
+              library.find((e) => e.id === card.exerciseId)?.kind === "cardio";
             return (
               <ExerciseCard
                 key={key}
                 name={card.name}
                 planned={card.planned}
+                isCardio={isCardio}
                 isFirst={i === 0}
                 isLast={i === cards.length - 1}
                 status={status}
@@ -243,9 +248,7 @@ export default function WorkoutLive({ sessionId }: { sessionId: number }) {
                   setExpandOverride((prev) => ({ ...prev, [key]: !expanded }))
                 }
                 sets={setsByExercise.get(card.exerciseId) ?? []}
-                onLog={(reps, weight, rpe) =>
-                  logSet(card.exerciseId, reps, weight, rpe)
-                }
+                onLog={(payload) => logSet(card.exerciseId, payload)}
                 onDeleteSet={deleteSet}
                 onSwap={
                   card.planned ? () => setSwapTarget(card.planned!) : undefined
@@ -331,7 +334,7 @@ function ExercisePicker({
   const [filter, setFilter] = useState("");
   const [guideFor, setGuideFor] = useState<string | null>(null);
 
-  const groups = ["", "Chest", "Back", "Legs", "Shoulders", "Arms", "Core", "Full Body"];
+  const groups = ["", "Chest", "Back", "Legs", "Shoulders", "Arms", "Core", "Full Body", "Cardio"];
   const [group, setGroup] = useState("");
 
   const candidates = library.filter(
@@ -431,6 +434,7 @@ type CardStatus = "active" | "upcoming" | "done";
 function ExerciseCard({
   name,
   planned,
+  isCardio,
   sets,
   isFirst,
   isLast,
@@ -446,13 +450,14 @@ function ExerciseCard({
 }: {
   name: string;
   planned?: SessionExercise;
+  isCardio: boolean;
   sets: SetLog[];
   isFirst: boolean;
   isLast: boolean;
   status: CardStatus;
   expanded: boolean;
   onToggle: () => void;
-  onLog: (reps: number, weight: number, rpe: string) => Promise<boolean>;
+  onLog: (payload: Record<string, unknown>) => Promise<boolean>;
   onDeleteSet: (setId: number) => void;
   onSwap?: () => void;
   onMove?: (direction: -1 | 1) => void;
@@ -463,15 +468,36 @@ function ExerciseCard({
   const [reps, setReps] = useState("");
   const [weight, setWeight] = useState("");
   const [rpe, setRpe] = useState("");
+  const [durationMin, setDurationMin] = useState("");
+  const [distanceKm, setDistanceKm] = useState("");
+  const [avgHr, setAvgHr] = useState("");
   const [busy, setBusy] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
 
   async function submit() {
+    if (isCardio) {
+      const dur = durationMin === "" ? null : Number(durationMin);
+      const dist = distanceKm === "" ? null : Number(distanceKm);
+      if (!dur && !dist) return;
+      setBusy(true);
+      const ok = await onLog({
+        duration_min: dur,
+        distance_km: dist,
+        avg_hr: avgHr === "" ? null : Number(avgHr),
+      });
+      setBusy(false);
+      if (ok) {
+        setDurationMin("");
+        setDistanceKm("");
+        setAvgHr("");
+      }
+      return;
+    }
     const repsNum = Number(reps);
     const weightNum = weight === "" ? 0 : Number(weight);
     if (!repsNum || repsNum <= 0) return;
     setBusy(true);
-    const ok = await onLog(repsNum, weightNum, rpe);
+    const ok = await onLog({ reps: repsNum, weight: weightNum, rpe });
     setBusy(false);
     if (ok) setRpe("");
   }
@@ -519,7 +545,7 @@ function ExerciseCard({
               How to
             </button>
           </div>
-          {planned && (
+          {planned && !isCardio && (
             <div className="text-xs text-zinc-500">
               Target: {planned.target_sets} × {planned.target_reps}
               {planned.target_weight != null
@@ -529,11 +555,29 @@ function ExerciseCard({
               {planned.notes ? ` · ${planned.notes}` : ""}
             </div>
           )}
+          {planned && isCardio && (
+            <div className="text-xs text-zinc-500">
+              Target:{" "}
+              {[
+                planned.target_duration_min
+                  ? `${planned.target_duration_min} min`
+                  : null,
+                planned.target_distance_km
+                  ? `${planned.target_distance_km} km`
+                  : null,
+                planned.target_zone ? zoneLabel(planned.target_zone) : null,
+              ]
+                .filter(Boolean)
+                .join(" · ") || "free effort"}
+              {planned.notes ? ` · ${planned.notes}` : ""}
+            </div>
+          )}
         </div>
         <div className="flex items-center gap-1">
           <span className="mr-1 text-sm tabular-nums text-zinc-500">
             {sets.length}
-            {planned ? `/${planned.target_sets}` : ""} sets
+            {planned ? `/${planned.target_sets}` : ""}{" "}
+            {isCardio ? "done" : "sets"}
           </span>
           {!readOnly && onMove && expanded && (
             <>
@@ -599,13 +643,23 @@ function ExerciseCard({
               key={s.id}
               className="group flex items-center justify-between rounded bg-zinc-100/80 px-3 py-1.5 text-sm tabular-nums"
             >
-              <span className="text-zinc-500">Set {s.set_number}</span>
+              <span className="text-zinc-500">
+                {s.duration_seconds != null || s.distance_km != null
+                  ? `Effort ${s.set_number}`
+                  : `Set ${s.set_number}`}
+              </span>
               <span>
-                {s.reps} reps × {s.weight} kg
-                {s.rpe != null && (
-                  <span className="ml-2 text-xs text-zinc-500">
-                    RPE {s.rpe}
-                  </span>
+                {s.duration_seconds != null || s.distance_km != null ? (
+                  cardioEffortStr(s)
+                ) : (
+                  <>
+                    {s.reps} reps × {s.weight} kg
+                    {s.rpe != null && (
+                      <span className="ml-2 text-xs text-zinc-500">
+                        RPE {s.rpe}
+                      </span>
+                    )}
+                  </>
                 )}
               </span>
               {!readOnly && (
@@ -622,7 +676,62 @@ function ExerciseCard({
         </div>
       )}
 
-      {expanded && !readOnly && (
+      {expanded && !readOnly && isCardio && (
+        <div className="mt-3 flex flex-wrap items-end gap-2">
+          <div>
+            <label className="mb-1 block text-xs text-zinc-500">
+              Time (min)
+            </label>
+            <input
+              type="number"
+              inputMode="decimal"
+              value={durationMin}
+              onChange={(e) => setDurationMin(e.target.value)}
+              placeholder={
+                planned?.target_duration_min
+                  ? String(planned.target_duration_min)
+                  : "20"
+              }
+              className="w-24 rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm outline-none focus:border-blue-500"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs text-zinc-500">
+              Distance (km) <span className="text-zinc-400">(opt.)</span>
+            </label>
+            <input
+              type="number"
+              inputMode="decimal"
+              value={distanceKm}
+              onChange={(e) => setDistanceKm(e.target.value)}
+              placeholder="—"
+              className="w-28 rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm outline-none focus:border-blue-500"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs text-zinc-500">
+              Avg HR <span className="text-zinc-400">(opt.)</span>
+            </label>
+            <input
+              type="number"
+              inputMode="numeric"
+              value={avgHr}
+              onChange={(e) => setAvgHr(e.target.value)}
+              placeholder="bpm"
+              className="w-20 rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm outline-none focus:border-blue-500"
+            />
+          </div>
+          <button
+            onClick={submit}
+            disabled={busy || (!durationMin && !distanceKm)}
+            className="rounded-md bg-zinc-900 px-4 py-1.5 text-sm font-semibold text-white hover:bg-zinc-700 disabled:opacity-40"
+          >
+            {busy ? "…" : "Log effort"}
+          </button>
+        </div>
+      )}
+
+      {expanded && !readOnly && !isCardio && (
         <div className="mt-3 flex flex-wrap items-end gap-2">
           <div>
             <label className="mb-1 block text-xs text-zinc-500">Reps</label>

@@ -141,9 +141,23 @@ export function generatePlan(
   const weekdays = WEEKDAY_ASSIGNMENTS[days.length] ?? [];
   const insertExercise = db.prepare(
     `INSERT INTO template_exercises
-       (template_id, exercise_id, position, target_sets, target_reps, target_weight, rest_seconds, notes)
-     VALUES (?, ?, ?, ?, ?, NULL, ?, '')`
+       (template_id, exercise_id, position, target_sets, target_reps, target_weight, rest_seconds, notes,
+        target_duration_min, target_distance_km, target_zone)
+     VALUES (?, ?, ?, ?, ?, NULL, ?, '', NULL, NULL, NULL)`
   );
+  const insertCardio = db.prepare(
+    `INSERT INTO template_exercises
+       (template_id, exercise_id, position, target_sets, target_reps, target_weight, rest_seconds, notes,
+        target_duration_min, target_distance_km, target_zone)
+     VALUES (?, ?, ?, 1, '', NULL, 0, 'Easy conversational pace', ?, NULL, ?)`
+  );
+  // Fat-loss plans finish each session with easy Zone 2 cardio.
+  const cardioFinisher =
+    profile.goal === "fat_loss"
+      ? ["Cycling", "Incline Treadmill Walk", "Rowing Machine", "Running"]
+          .map((n) => byName.get(n.toLowerCase()))
+          .find((e) => e && allowed.has(e.equipment))
+      : undefined;
 
   const summary: GeneratedPlanSummary = { templates: [] };
 
@@ -174,11 +188,15 @@ export function generatePlan(
         const scheme = schemeFor(profile.goal, p.slot.compound, profile.experience);
         insertExercise.run(templateId, p.id, i, scheme.sets, scheme.reps, scheme.rest);
       });
+      if (cardioFinisher) {
+        const minutes = profile.experience === "beginner" ? 15 : 20;
+        insertCardio.run(templateId, cardioFinisher.id, picked.length, minutes, "Z2");
+      }
 
       summary.templates.push({
         id: templateId,
         name,
-        exercises: picked.length,
+        exercises: picked.length + (cardioFinisher ? 1 : 0),
       });
     });
   })();

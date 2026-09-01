@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { cardioEffortStr, durationStr } from "@/lib/cardio";
 import { getDb } from "@/lib/db";
 import { estimateOneRepMax } from "@/lib/types";
 import type { ChatMessage, SetLog, WorkoutSession } from "@/lib/types";
@@ -44,6 +45,10 @@ export default async function SessionDetailPage({
   const totalVolume = Math.round(
     sets.reduce((acc, s) => acc + s.reps * s.weight, 0)
   );
+  const cardioSeconds = sets.reduce(
+    (acc, s) => acc + (s.duration_seconds ?? 0),
+    0
+  );
 
   return (
     <div className="space-y-6">
@@ -65,10 +70,15 @@ export default async function SessionDetailPage({
         )}
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div
+        className={`grid gap-4 ${cardioSeconds > 0 ? "grid-cols-2 sm:grid-cols-4" : "grid-cols-3"}`}
+      >
         <Tile label="Exercises" value={byExercise.size} />
         <Tile label="Sets" value={sets.length} />
         <Tile label="Volume" value={`${totalVolume.toLocaleString()} kg`} />
+        {cardioSeconds > 0 && (
+          <Tile label="Cardio" value={durationStr(cardioSeconds)} />
+        )}
       </div>
 
       <section className="space-y-3">
@@ -99,22 +109,34 @@ export default async function SessionDetailPage({
                 )}
               </div>
               <div className="mt-2 space-y-1">
-                {list.map((s) => (
-                  <div
-                    key={s.id}
-                    className="flex items-center justify-between rounded bg-zinc-100/80 px-3 py-1.5 text-sm tabular-nums"
-                  >
-                    <span className="text-zinc-500">Set {s.set_number}</span>
-                    <span>
-                      {s.reps} reps × {s.weight} kg
-                      {s.rpe != null && (
-                        <span className="ml-2 text-xs text-zinc-500">
-                          RPE {s.rpe}
-                        </span>
-                      )}
-                    </span>
-                  </div>
-                ))}
+                {list.map((s) => {
+                  const isCardio =
+                    s.duration_seconds != null || s.distance_km != null;
+                  return (
+                    <div
+                      key={s.id}
+                      className="flex items-center justify-between rounded bg-zinc-100/80 px-3 py-1.5 text-sm tabular-nums"
+                    >
+                      <span className="text-zinc-500">
+                        {isCardio ? "Effort" : "Set"} {s.set_number}
+                      </span>
+                      <span>
+                        {isCardio ? (
+                          cardioEffortStr(s)
+                        ) : (
+                          <>
+                            {s.reps} reps × {s.weight} kg
+                            {s.rpe != null && (
+                              <span className="ml-2 text-xs text-zinc-500">
+                                RPE {s.rpe}
+                              </span>
+                            )}
+                          </>
+                        )}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           );

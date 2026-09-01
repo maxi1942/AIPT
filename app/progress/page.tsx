@@ -9,13 +9,18 @@ export default function ProgressPage() {
   const db = getDb();
   const exerciseOptions = db
     .prepare(
-      `SELECT s.exercise_id, e.name, COUNT(*) AS sets
+      `SELECT s.exercise_id, e.name, e.kind, COUNT(*) AS sets
        FROM set_logs s
        JOIN exercises e ON e.id = s.exercise_id
        GROUP BY s.exercise_id
        ORDER BY e.name ASC`
     )
-    .all() as Array<{ exercise_id: number; name: string; sets: number }>;
+    .all() as Array<{
+    exercise_id: number;
+    name: string;
+    sets: number;
+    kind: "strength" | "cardio";
+  }>;
 
   return (
     <div className="space-y-6">
@@ -27,13 +32,21 @@ export default function ProgressPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
         <Tile label="Workouts completed" value={stats.totalSessions} />
         <Tile label="Last 30 days" value={stats.sessionsLast30Days} />
         <Tile label="Total sets" value={stats.totalSets} />
         <Tile
           label="Total volume"
           value={`${stats.totalVolume.toLocaleString()} kg`}
+        />
+        <Tile
+          label="Cardio (30 days)"
+          value={`${stats.cardioMinutesLast30Days} min`}
+        />
+        <Tile
+          label="Distance (30 days)"
+          value={`${stats.cardioKmLast30Days} km`}
         />
       </div>
 

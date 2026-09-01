@@ -1,6 +1,7 @@
+import { cardioEffortStr, CARDIO_BY_GOAL, zoneLabel, zonesPromptBlock } from "./cardio";
 import { getDb } from "./db";
 import { ensureSessionExercises } from "./sessionPlan";
-import { getExerciseHistory, getOverviewStats } from "./stats";
+import { getCardioHistory, getExerciseHistory, getOverviewStats } from "./stats";
 import { GOAL_LABELS } from "./types";
 import type { SetLog, UserProfile, WorkoutSession } from "./types";
 
@@ -91,6 +92,17 @@ export function buildTrainerSystemPrompt(sessionId: number): string {
   if (sessionExercises.length > 0) {
     lines.push("## Today's plan (in order)");
     for (const se of sessionExercises) {
+      if (se.exercise_kind === "cardio") {
+        const parts: string[] = [];
+        if (se.target_duration_min) parts.push(`${se.target_duration_min} min`);
+        if (se.target_distance_km) parts.push(`${se.target_distance_km} km`);
+        if (se.target_zone)
+          parts.push(`in ${zoneLabel(se.target_zone, profile?.age)}`);
+        lines.push(
+          `- ${se.exercise_name} (cardio): ${parts.join(", ") || "free effort"}${se.notes ? ` — note: ${se.notes}` : ""}`
+        );
+        continue;
+      }
       const weight =
         se.target_weight != null ? ` @ ${se.target_weight} kg` : "";
       lines.push(
@@ -112,9 +124,10 @@ export function buildTrainerSystemPrompt(sessionId: number): string {
       byExercise.set(key, list);
     }
     for (const [name, list] of byExercise) {
-      const parts = list.map(
-        (s) =>
-          `${s.reps} reps x ${s.weight} kg${s.rpe != null ? ` (RPE ${s.rpe})` : ""}`
+      const parts = list.map((s) =>
+        s.duration_seconds != null || s.distance_km != null
+          ? cardioEffortStr(s)
+          : `${s.reps} reps x ${s.weight} kg${s.rpe != null ? ` (RPE ${s.rpe})` : ""}`
       );
       lines.push(`- ${name}: ${parts.join(", ")}`);
     }
@@ -126,17 +139,35 @@ export function buildTrainerSystemPrompt(sessionId: number): string {
   );
   let anyHistory = false;
   for (const exerciseId of exerciseIds) {
+    const meta = db
+      .prepare("SELECT name, kind FROM exercises WHERE id = ?")
+      .get(exerciseId) as { name: string; kind: string } | undefined;
+
+    if (meta?.kind === "cardio") {
+      const history = getCardioHistory(exerciseId, 6).filter(
+        (h) => h.session_id !== sessionId
+      );
+      if (history.length === 0) continue;
+      anyHistory = true;
+      lines.push(`### ${meta.name} (cardio)`);
+      for (const h of history) {
+        lines.push(
+          `- ${h.date.slice(0, 10)}: ${cardioEffortStr({
+            duration_seconds: h.duration_seconds || null,
+            distance_km: h.distance_km || null,
+            avg_hr: h.avg_hr,
+          })}`
+        );
+      }
+      continue;
+    }
+
     const history = getExerciseHistory(exerciseId, 6).filter(
       (h) => h.session_id !== sessionId
     );
     if (history.length === 0) continue;
     anyHistory = true;
-    const name = (
-      db.prepare("SELECT name FROM exercises WHERE id = ?").get(exerciseId) as
-        | { name: string }
-        | undefined
-    )?.name;
-    lines.push(`### ${name ?? `Exercise ${exerciseId}`}`);
+    lines.push(`### ${meta?.name ?? `Exercise ${exerciseId}`}`);
     for (const h of history) {
       lines.push(
         `- ${h.date.slice(0, 10)}: ${h.sets} sets, total volume ${h.total_volume} kg, top set ${h.top_weight} kg x ${h.top_reps}, est. 1RM ${h.est_1rm} kg`
@@ -160,8 +191,10 @@ export function buildTrainerSystemPrompt(sessionId: number): string {
   );
 
   const goalBlock = profile
-    ? GOAL_COACHING[profile.goal]
+    ? `${GOAL_COACHING[profile.goal]}\n\n${CARDIO_BY_GOAL[profile.goal]}`
     : "The lifter has not set a goal yet — coach for general fitness (8-12 reps, RPE 7-9, 90s rest) and suggest they set up their profile for tailored programming.";
+
+  const zonesBlock = zonesPromptBlock(profile?.age);
 
   return `You are an experienced, evidence-based personal trainer coaching a lifter LIVE, mid-workout, through their workout-logging app. All data below comes straight from the app's database and is the ground truth.
 
@@ -172,6 +205,13 @@ You are proactive, like a PT standing next to them:
 - Ask at most one short question at a time (e.g. "how did that feel?"), and only when the answer changes your next recommendation.
 
 ${goalBlock}
+
+${zonesBlock}
+
+Cardio coaching rules:
+- Cardio efforts are logged as time, distance, and average heart rate — judge them against the planned zone and past sessions (same HR at faster pace = fitter; HR drifting above zone = go slower or shorten).
+- For intervals, prescribe them concretely: work time, target zone/effort, recovery time, number of reps.
+- After a cardio effort, react like after a set: 1-2 sentences, judged against the target zone/duration, with a concrete next step.
 
 Safety and coaching rules:
 - Watch for red flags: load jumps >10% over last session, reps collapsing across sets, RPE 10 early in the session — recommend backing off when you see them.

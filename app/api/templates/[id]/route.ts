@@ -12,7 +12,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
   }
   const exercises = db
     .prepare(
-      `SELECT te.*, e.name AS exercise_name, e.muscle_group, e.equipment
+      `SELECT te.*, e.name AS exercise_name, e.muscle_group, e.equipment, e.kind AS exercise_kind
        FROM template_exercises te
        JOIN exercises e ON e.id = te.exercise_id
        WHERE te.template_id = ?
@@ -29,6 +29,9 @@ interface IncomingTemplateExercise {
   target_weight?: number | null;
   rest_seconds?: number;
   notes?: string;
+  target_duration_min?: number | null;
+  target_distance_km?: number | null;
+  target_zone?: string | null;
 }
 
 export async function PUT(req: NextRequest, { params }: Params) {
@@ -56,8 +59,9 @@ export async function PUT(req: NextRequest, { params }: Params) {
 
   const insertExercise = db.prepare(
     `INSERT INTO template_exercises
-       (template_id, exercise_id, position, target_sets, target_reps, target_weight, rest_seconds, notes)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+       (template_id, exercise_id, position, target_sets, target_reps, target_weight, rest_seconds, notes,
+        target_duration_min, target_distance_km, target_zone)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   );
 
   db.transaction(() => {
@@ -74,7 +78,10 @@ export async function PUT(req: NextRequest, { params }: Params) {
         ex.target_reps ?? "8-12",
         ex.target_weight ?? null,
         ex.rest_seconds ?? 90,
-        ex.notes ?? ""
+        ex.notes ?? "",
+        ex.target_duration_min ?? null,
+        ex.target_distance_km ?? null,
+        ex.target_zone ?? null
       );
     });
   })();
@@ -100,9 +107,12 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   const db = getDb();
   const row = db
     .prepare(
-      "SELECT id FROM template_exercises WHERE id = ? AND template_id = ?"
+      `SELECT te.id, e.kind AS old_kind
+       FROM template_exercises te
+       JOIN exercises e ON e.id = te.exercise_id
+       WHERE te.id = ? AND te.template_id = ?`
     )
-    .get(rowId, id);
+    .get(rowId, id) as { id: number; old_kind: string } | undefined;
   if (!row) {
     return NextResponse.json(
       { error: "Exercise not found in this workout" },
@@ -110,16 +120,35 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     );
   }
   const exercise = db
-    .prepare("SELECT id FROM exercises WHERE id = ?")
-    .get(newExerciseId);
+    .prepare("SELECT id, kind FROM exercises WHERE id = ?")
+    .get(newExerciseId) as { id: number; kind: string } | undefined;
   if (!exercise) {
     return NextResponse.json({ error: "Exercise not found" }, { status: 404 });
   }
 
-  db.prepare("UPDATE template_exercises SET exercise_id = ? WHERE id = ?").run(
-    newExerciseId,
-    rowId
-  );
+  if (exercise.kind !== row.old_kind) {
+    // Crossing strength <-> cardio: reset the slot's targets to kind defaults.
+    if (exercise.kind === "cardio") {
+      db.prepare(
+        `UPDATE template_exercises
+         SET exercise_id = ?, target_sets = 1, target_reps = '', target_weight = NULL,
+             rest_seconds = 0, target_duration_min = 20, target_distance_km = NULL, target_zone = 'Z2'
+         WHERE id = ?`
+      ).run(newExerciseId, rowId);
+    } else {
+      db.prepare(
+        `UPDATE template_exercises
+         SET exercise_id = ?, target_sets = 3, target_reps = '8-12', target_weight = NULL,
+             rest_seconds = 90, target_duration_min = NULL, target_distance_km = NULL, target_zone = NULL
+         WHERE id = ?`
+      ).run(newExerciseId, rowId);
+    }
+  } else {
+    db.prepare("UPDATE template_exercises SET exercise_id = ? WHERE id = ?").run(
+      newExerciseId,
+      rowId
+    );
+  }
 
   const updated = db
     .prepare(

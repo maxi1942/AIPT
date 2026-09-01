@@ -4,6 +4,8 @@ export interface Exercise {
   muscle_group: string;
   equipment: string;
   is_custom: number;
+  /** 'strength' logs reps x weight; 'cardio' logs time/distance/heart rate. */
+  kind: "strength" | "cardio";
 }
 
 export interface Template {
@@ -43,9 +45,13 @@ export interface TemplateExercise {
   target_weight: number | null;
   rest_seconds: number;
   notes: string;
+  target_duration_min: number | null;
+  target_distance_km: number | null;
+  target_zone: string | null;
   exercise_name?: string;
   muscle_group?: string;
   equipment?: string;
+  exercise_kind?: "strength" | "cardio";
 }
 
 export interface WorkoutSession {
@@ -66,6 +72,10 @@ export interface SetLog {
   weight: number;
   rpe: number | null;
   logged_at: string;
+  /** Cardio efforts: reps/weight are 0 and these carry the data. */
+  duration_seconds: number | null;
+  distance_km: number | null;
+  avg_hr: number | null;
   exercise_name?: string;
 }
 
@@ -87,9 +97,13 @@ export interface SessionExercise {
   target_weight: number | null;
   rest_seconds: number;
   notes: string;
+  target_duration_min: number | null;
+  target_distance_km: number | null;
+  target_zone: string | null;
   exercise_name?: string;
   muscle_group?: string;
   equipment?: string;
+  exercise_kind?: "strength" | "cardio";
 }
 
 export type Goal = "size" | "fat_loss" | "strength" | "maintain";

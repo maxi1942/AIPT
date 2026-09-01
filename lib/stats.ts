@@ -58,12 +58,47 @@ export function getExerciseHistory(
   return points.slice(-limit);
 }
 
+export interface CardioHistoryPoint {
+  session_id: number;
+  date: string;
+  duration_seconds: number;
+  distance_km: number;
+  avg_hr: number | null;
+  efforts: number;
+}
+
+/** Per-session cardio summary for one exercise, oldest first. */
+export function getCardioHistory(
+  exerciseId: number,
+  limit = 20
+): CardioHistoryPoint[] {
+  const db = getDb();
+  const points = db
+    .prepare(
+      `SELECT s.session_id, MIN(w.started_at) AS date,
+              COALESCE(SUM(s.duration_seconds), 0) AS duration_seconds,
+              COALESCE(SUM(s.distance_km), 0) AS distance_km,
+              CAST(ROUND(AVG(s.avg_hr)) AS INTEGER) AS avg_hr,
+              COUNT(*) AS efforts
+       FROM set_logs s
+       JOIN workout_sessions w ON w.id = s.session_id
+       WHERE s.exercise_id = ? AND (s.duration_seconds IS NOT NULL OR s.distance_km IS NOT NULL)
+       GROUP BY s.session_id
+       ORDER BY date ASC`
+    )
+    .all(exerciseId) as CardioHistoryPoint[];
+  return points.slice(-limit);
+}
+
 export interface OverviewStats {
   totalSessions: number;
   sessionsLast30Days: number;
   totalSets: number;
   totalVolume: number;
+  cardioMinutesLast30Days: number;
+  cardioKmLast30Days: number;
   volumeByWeek: Array<{ week: string; volume: number }>;
+  cardioMinutesByWeek: Array<{ week: string; minutes: number }>;
   topExercises: Array<{ exercise_id: number; name: string; sets: number }>;
 }
 
@@ -105,6 +140,30 @@ export function getOverviewStats(): OverviewStats {
     )
     .all() as Array<{ week: string; volume: number }>;
 
+  const cardio30 = db
+    .prepare(
+      `SELECT COALESCE(SUM(s.duration_seconds), 0) AS seconds,
+              COALESCE(SUM(s.distance_km), 0) AS km
+       FROM set_logs s
+       JOIN workout_sessions w ON w.id = s.session_id
+       WHERE w.started_at >= datetime('now', '-30 days')
+         AND (s.duration_seconds IS NOT NULL OR s.distance_km IS NOT NULL)`
+    )
+    .get() as { seconds: number; km: number };
+
+  const cardioMinutesByWeek = db
+    .prepare(
+      `SELECT strftime('%Y-%W', w.started_at) AS week,
+              ROUND(SUM(s.duration_seconds) / 60.0) AS minutes
+       FROM set_logs s
+       JOIN workout_sessions w ON w.id = s.session_id
+       WHERE w.started_at >= datetime('now', '-84 days')
+         AND s.duration_seconds IS NOT NULL
+       GROUP BY week
+       ORDER BY week ASC`
+    )
+    .all() as Array<{ week: string; minutes: number }>;
+
   const topExercises = db
     .prepare(
       `SELECT s.exercise_id, e.name, COUNT(*) AS sets
@@ -121,7 +180,10 @@ export function getOverviewStats(): OverviewStats {
     sessionsLast30Days,
     totalSets: totals.sets,
     totalVolume: Math.round(totals.volume),
+    cardioMinutesLast30Days: Math.round(cardio30.seconds / 60),
+    cardioKmLast30Days: Math.round(cardio30.km * 10) / 10,
     volumeByWeek,
+    cardioMinutesByWeek,
     topExercises,
   };
 }

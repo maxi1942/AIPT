@@ -142,14 +142,36 @@ function migrate(db: Database.Database) {
   `);
 
   // templates.weekday: 0=Monday .. 6=Sunday, NULL = unscheduled.
-  const templateCols = db
-    .prepare("PRAGMA table_info(templates)")
-    .all() as Array<{ name: string }>;
-  if (!templateCols.some((c) => c.name === "weekday")) {
-    db.exec("ALTER TABLE templates ADD COLUMN weekday INTEGER");
+  addColumnIfMissing(db, "templates", "weekday", "INTEGER");
+
+  // Cardio support: exercises are 'strength' or 'cardio'; cardio efforts log
+  // time/distance/heart rate, and plans can target duration and an HR zone.
+  addColumnIfMissing(db, "exercises", "kind", "TEXT NOT NULL DEFAULT 'strength'");
+  addColumnIfMissing(db, "set_logs", "duration_seconds", "REAL");
+  addColumnIfMissing(db, "set_logs", "distance_km", "REAL");
+  addColumnIfMissing(db, "set_logs", "avg_hr", "INTEGER");
+  for (const table of ["template_exercises", "session_exercises"]) {
+    addColumnIfMissing(db, table, "target_duration_min", "REAL");
+    addColumnIfMissing(db, table, "target_distance_km", "REAL");
+    addColumnIfMissing(db, table, "target_zone", "TEXT");
   }
 
   seedExercises(db);
+  seedCardioExercises(db);
+}
+
+function addColumnIfMissing(
+  db: Database.Database,
+  table: string,
+  column: string,
+  definition: string
+) {
+  const cols = db
+    .prepare(`PRAGMA table_info(${table})`)
+    .all() as Array<{ name: string }>;
+  if (!cols.some((c) => c.name === column)) {
+    db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
+  }
 }
 
 const SEED_EXERCISES: Array<[string, string, string]> = [
@@ -217,6 +239,29 @@ function seedExercises(db: Database.Database) {
     for (const [name, group, equipment] of SEED_EXERCISES) {
       insert.run(name, group, equipment);
     }
+  });
+  tx();
+}
+
+const SEED_CARDIO: Array<[string, string]> = [
+  ["Running", "bodyweight"],
+  ["Cycling", "machine"],
+  ["Rowing Machine", "machine"],
+  ["Swimming", "other"],
+  ["Elliptical", "machine"],
+  ["Stair Climber", "machine"],
+  ["Incline Treadmill Walk", "machine"],
+  ["Jump Rope", "other"],
+];
+
+/** Idempotent (INSERT OR IGNORE by unique name), so it runs on every boot
+ *  and back-fills cardio into databases seeded before cardio existed. */
+function seedCardioExercises(db: Database.Database) {
+  const insert = db.prepare(
+    "INSERT OR IGNORE INTO exercises (name, muscle_group, equipment, is_custom, kind) VALUES (?, 'Cardio', ?, 0, 'cardio')"
+  );
+  const tx = db.transaction(() => {
+    for (const [name, equipment] of SEED_CARDIO) insert.run(name, equipment);
   });
   tx();
 }

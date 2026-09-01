@@ -22,6 +22,9 @@ interface IncomingTemplateExercise {
   target_weight?: number | null;
   rest_seconds?: number;
   notes?: string;
+  target_duration_min?: number | null;
+  target_distance_km?: number | null;
+  target_zone?: string | null;
 }
 
 export async function POST(req: NextRequest) {
@@ -52,8 +55,9 @@ export async function POST(req: NextRequest) {
   );
   const insertExercise = db.prepare(
     `INSERT INTO template_exercises
-       (template_id, exercise_id, position, target_sets, target_reps, target_weight, rest_seconds, notes)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+       (template_id, exercise_id, position, target_sets, target_reps, target_weight, rest_seconds, notes,
+        target_duration_min, target_distance_km, target_zone)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   );
 
   const templateId = db.transaction(() => {
@@ -68,7 +72,10 @@ export async function POST(req: NextRequest) {
         ex.target_reps ?? "8-12",
         ex.target_weight ?? null,
         ex.rest_seconds ?? 90,
-        ex.notes ?? ""
+        ex.notes ?? "",
+        ex.target_duration_min ?? null,
+        ex.target_distance_km ?? null,
+        ex.target_zone ?? null
       );
     });
     return id;

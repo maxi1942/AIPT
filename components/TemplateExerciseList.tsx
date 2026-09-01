@@ -2,8 +2,9 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import ExerciseAnimation from "./ExerciseAnimation";
 import ExercisePickerSheet from "./ExercisePickerSheet";
+import ExerciseThumb from "./ExerciseThumb";
+import { zoneLabel } from "@/lib/cardio";
 import type { Exercise, TemplateExercise } from "@/lib/types";
 
 /**
@@ -70,22 +71,43 @@ export default function TemplateExerciseList({
             title={`Swap ${ex.exercise_name}`}
           >
             <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-zinc-100/80">
-              <ExerciseAnimation
-                exerciseName={ex.exercise_name ?? ""}
-                size={64}
-              />
+              <ExerciseThumb exerciseName={ex.exercise_name ?? ""} size={64} />
             </div>
             <div className="min-w-0 grow">
               <div className="truncate text-sm font-semibold text-zinc-900">
                 {ex.exercise_name}
               </div>
-              <div className="mt-0.5 text-xs text-zinc-500">
-                {ex.target_sets} sets of {ex.target_reps} reps
-                {ex.target_weight != null ? ` @ ${ex.target_weight} kg` : ""}
-              </div>
-              <div className="mt-0.5 text-xs text-zinc-400">
-                {ex.muscle_group} · rest {ex.rest_seconds}s
-              </div>
+              {ex.exercise_kind === "cardio" ? (
+                <>
+                  <div className="mt-0.5 text-xs text-zinc-500">
+                    {[
+                      ex.target_duration_min
+                        ? `${ex.target_duration_min} min`
+                        : null,
+                      ex.target_distance_km
+                        ? `${ex.target_distance_km} km`
+                        : null,
+                      ex.target_zone ? zoneLabel(ex.target_zone) : null,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ") || "Free effort"}
+                    {ex.target_sets > 1 ? ` × ${ex.target_sets}` : ""}
+                  </div>
+                  <div className="mt-0.5 text-xs text-zinc-400">Cardio</div>
+                </>
+              ) : (
+                <>
+                  <div className="mt-0.5 text-xs text-zinc-500">
+                    {ex.target_sets} sets of {ex.target_reps} reps
+                    {ex.target_weight != null
+                      ? ` @ ${ex.target_weight} kg`
+                      : ""}
+                  </div>
+                  <div className="mt-0.5 text-xs text-zinc-400">
+                    {ex.muscle_group} · rest {ex.rest_seconds}s
+                  </div>
+                </>
+              )}
             </div>
             <span
               className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-zinc-100 text-zinc-500"
@@ -113,7 +135,11 @@ export default function TemplateExerciseList({
       {swapFor && (
         <ExercisePickerSheet
           title={`Swap ${swapFor.exercise_name}`}
-          subtitle={`${swapFor.target_sets} sets of ${swapFor.target_reps} reps stay as they are.`}
+          subtitle={
+            swapFor.exercise_kind === "cardio"
+              ? "Duration and zone targets carry over to another cardio mode."
+              : `${swapFor.target_sets} sets of ${swapFor.target_reps} reps stay as they are.`
+          }
           library={library}
           exclude={usedIds}
           initialGroup={swapFor.muscle_group ?? ""}

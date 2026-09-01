@@ -11,7 +11,7 @@ export function ensureSessionExercises(
   sessionId: number
 ): SessionExercise[] {
   const select = db.prepare(
-    `SELECT se.*, e.name AS exercise_name, e.muscle_group, e.equipment
+    `SELECT se.*, e.name AS exercise_name, e.muscle_group, e.equipment, e.kind AS exercise_kind
      FROM session_exercises se
      JOIN exercises e ON e.id = se.exercise_id
      WHERE se.session_id = ?
@@ -38,8 +38,10 @@ export function copyTemplateToSession(
 ): void {
   db.prepare(
     `INSERT INTO session_exercises
-       (session_id, exercise_id, position, target_sets, target_reps, target_weight, rest_seconds, notes)
-     SELECT ?, exercise_id, position, target_sets, target_reps, target_weight, rest_seconds, notes
+       (session_id, exercise_id, position, target_sets, target_reps, target_weight, rest_seconds, notes,
+        target_duration_min, target_distance_km, target_zone)
+     SELECT ?, exercise_id, position, target_sets, target_reps, target_weight, rest_seconds, notes,
+            target_duration_min, target_distance_km, target_zone
      FROM template_exercises WHERE template_id = ?
      ORDER BY position ASC`
   ).run(sessionId, templateId);
